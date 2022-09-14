@@ -65,6 +65,22 @@ def jac_inverse(a, x, y):
     J[:, 2] = -1
     return J
 
+def recalibrated_multichannel_response_curve_red(x, a_red, b_red, fitResults):
+    return a_red + b_red*multichannel_model(fitResults.x, x)
+def inverse_recalibrated_multichannel_response_curve_red(y, a_red, b_red, fitResults):
+    return (fitResults.x[1]*b_red + fitResults.x[0]*b_red*fitResults.x[2] + a_red*fitResults.x[2] - y*fitResults.x[2])/(y - a_red - fitResults.x[0]*b_red) #calcolato aniliticamente l'inverso
+#inverse_recalibrated_multichannel_response_curve_red = inversefunc(recalibrated_multichannel_response_curve_red)
+
+def recalibrated_multichannel_response_curve_green(x, a_green, b_green, fitResults):
+    return a_green + b_green*multichannel_model(fitResults.x, x) 
+def inverse_recalibrated_multichannel_response_curve_green(y, a_green, b_green, fitResults):
+    return (fitResults.x[1]*b_green + fitResults.x[0]*b_green*fitResults.x[2] + a_green*fitResults.x[2] - y*fitResults.x[2])/(y - a_green - fitResults.x[0]*b_green)
+
+def recalibrated_multichannel_response_curve_blue(x, a_blue, b_blue, fitResults):
+    return a_blue + b_blue*multichannel_model(fitResults.x, x)
+def inverse_recalibrated_multichannel_response_curve_blue(y, a_blue, b_blue, fitResults):
+    return (fitResults.x[1]*b_blue + fitResults.x[0]*b_blue*fitResults.x[2] + a_blue*fitResults.x[2] - y*fitResults.x[2])/(y - a_blue - fitResults.x[0]*b_blue) 
+
 def averageImages(images):
     sumIm = 0
     for im in images:
@@ -236,11 +252,11 @@ def plotCurves(calibration_dose, calibration_red, calibration_green, calibration
     
     return fitResults, x_max_lsmodel, y_calibration_fit
 
-def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber):
+def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults):
     x_calibration_fit = np.linspace(0, x_max_lsmodel)
-    y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit)
-    y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit)
-    y_calibration_fit_blue = recalibrated_multichannel_response_curve_blue(x_calibration_fit)
+    y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit, a_red, b_red, fitResults)
+    y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit,a_green, b_green, fitResults)
+    y_calibration_fit_blue = recalibrated_multichannel_response_curve_blue(x_calibration_fit,a_blue, b_blue, fitResults)
     plt.scatter(0, unexposedObject.calibrationRed, color='purple', label='red recalibration data')
     plt.scatter(0, unexposedObject.calibrationGreen, color='lime', label='green recalibration data')
     plt.scatter(0, unexposedObject.calibrationBlue, color='dodgerblue', label='blue recalibration data')
@@ -267,24 +283,6 @@ def calibration_factors_calculator(zeroResponse, maxdoseResponse, fitResults):
                             multichannel_model(fitResults.x, 0), #n1
                             multichannel_model(fitResults.x, maxdoseRecalibration)) #n2 
         return (a, b)
-
-       
-def remove_prefix(text, prefix):
-    if text.startswith(prefix):
-        return text[len(prefix):]
-    return text 
-    
-def plotTiff(listTiffs, prefix):
-    rows = 3
-    for num, x in enumerate(listTiffs):
-        img = PIL.Image.open(x)
-        plt.subplot(rows,2,num+1)
-        plt.title(remove_prefix(x, prefix).split('.')[0])
-        plt.axis('off')
-        plt.imshow(img)
-
-def gaus(x,a,x0,sigma):
-    return a*exp(-(x-x0)**2/(2*sigma**2))
 
 def find_nearest(array, value):
     length = len(array)
@@ -332,7 +330,7 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
         
     
     plt.figure()
-    c = plt.contourf(xx, yy, dose, cmap='hot', levels=levels)
+    c = plt.contourf(xx, yy, dose, cmap=cmap, levels=levels)
     plt.colorbar(c, label="Dose (Gy)")
     plt.title(stringcolor + " dose recalibrated calculation")
     plt.xlabel("x (mm)")
@@ -363,7 +361,7 @@ def plot_projections(dose, stringcolor, stringgrafico, half_x, half_y, stringcol
     find_fwhm_analytical(dose, half_x, half_y, stringcolor)
     plt.show()
     
-def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx3ch, bkgy3ch, inverse_recalibrated_multichannel_response_curve_red, inverse_recalibrated_multichannel_response_curve_green, inverse_recalibrated_multichannel_response_curve_blue):
+def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx3ch, bkgy3ch, inverse_recalibrated_multichannel_response_curve_red, inverse_recalibrated_multichannel_response_curve_green, inverse_recalibrated_multichannel_response_curve_blue, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults):
     if color =='3ch':
         dose = dose_nonfiltered
         dose_center = dose_nonfiltered
@@ -376,8 +374,8 @@ def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx
         half_maximum_x = (avg + bkgx3ch)/2
         half_maximum_y = (avg + bkgy3ch)/2
 
-        print("3 CHANNELS COMBINED: mean predicted dose at center = %0.01f Gy" % (avg))
-        print("3 CHANNELS COMBINED: standard deviation of predicted dose = %0.01f Gy" % (std), '\n') 
+        print("3 CHANNELS DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
+        print("3 CHANNELS DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
             
     else:
         dose_nonfiltered = dose_nonfiltered.clip(min=0)
@@ -386,13 +384,13 @@ def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx
         
         if color == 'r':
             ############################################################################################## np.random.rand(220,220)#
-            dose = inverse_recalibrated_multichannel_response_curve_red(filtered)
+            dose = inverse_recalibrated_multichannel_response_curve_red(filtered, a_red, b_red, fitResults)
         elif color == 'g':
             ############################################################################################## 
-            dose = inverse_recalibrated_multichannel_response_curve_green(filtered)
+            dose = inverse_recalibrated_multichannel_response_curve_green(filtered, a_green, b_green, fitResults)
         elif color == 'b':
             ##############################################################################################
-            dose = inverse_recalibrated_multichannel_response_curve_blue(filtered)
+            dose = inverse_recalibrated_multichannel_response_curve_blue(filtered, a_blue, b_blue, fitResults)
         else:
             raise Exception("error no color recognized")
             
@@ -404,17 +402,27 @@ def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx
         bkgx, bkgy, maxd, avg, mind, std, half_maximum_x, half_maximum_y = calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
                             
         if color == 'r':
-            print("RED CHANNEL: mean predicted dose at center = %0.01f Gy" % (avg))
-            print("RED CHANNEL: standard deviation of predicted dose = %0.01f Gy" % (std), '\n')       
+            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
+            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')       
         elif color == 'g':
-            print("GREEN CHANNEL: mean predicted dose at center = %0.01f Gy" % (avg))
-            print("GREEN CHANNEL: standard deviation of predicted dose = %0.01f Gy" % (std), '\n')
+            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
+            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')
         elif color == 'b':
-            print("BLUE CHANNEL: mean predicted dose at center = %0.01f Gy" % (avg))
-            print("BLUE CHANNEL: standard deviation of predicted dose = %0.01f Gy" % (std), '\n')
+            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
+            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')
         else:
             raise Exception("error no color recognized")
     return dose, mind, maxd, avg, std, half_maximum_x, half_maximum_y, dose_center, bkgx, bkgy
+
+
+calibrationObjects = []
+unexposedTreatmentObjects = []
+maxDoseTreatmentObjects = []
+
+redDosObjArr = []
+greenDosObjArr = []
+blueDosObjArr = []
+trheechDosObjArr = []
 
 
 
