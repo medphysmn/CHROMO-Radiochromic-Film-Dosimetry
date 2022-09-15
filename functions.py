@@ -354,8 +354,8 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
 
 #TODO mettere a posto!!!
 def calculatebkg(dose, dose_shapex, dose_shapey):
-    bkgx = 0#np.mean(dose[0 : int(dose_shapex), 0 : 5])
-    bkgy = 0#np.mean(dose[0 : 5, 0 : int(dose_shapey)])
+    bkgx = np.mean(dose[0 : int(dose_shapex), 0 : 5])
+    bkgy = np.mean(dose[0 : 5, 0 : int(dose_shapey)])
     return bkgx, bkgy
 
 def plot_projections(dose, stringcolor, stringgrafico, half_x, half_y, stringcolorgaussian):
