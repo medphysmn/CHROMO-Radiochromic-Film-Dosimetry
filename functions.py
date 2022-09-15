@@ -14,19 +14,30 @@ sys.path.append(".")
 from constants import *
 
 def cleanOutputDirectory():
-    files = gb.glob(outputPath +'/RED/*')
+    files = gb.glob(redPath +'*')
     for f in files:
         os.remove(f)
-    files = gb.glob(outputPath +'/GREEN/*')
+        
+    files = gb.glob(greenPath +'*')
     for f in files:
         os.remove(f)
-    files = gb.glob(outputPath +'/BLUE/*')
+        
+    files = gb.glob(bluePath +'*')    
     for f in files:
-        os.remove(f)
-    files = gb.glob(outputPath +'/3CH/*')
+        os.remove(f) 
+        
+    files = gb.glob(tchPath +'*')
     for f in files:
-        os.remove(f)
-
+        os.remove(f) 
+        
+    files = gb.glob(calibrationPath +'*')
+    for f in files:
+            os.remove(f)   
+            
+    files = gb.glob(treatmentPath +'*')
+    for f in files:
+            os.remove(f)
+            
 def a_recalibration(yp1, yp2, y1, y2):
     return (y2*yp1-y1*yp2)/(y2-y1)
 
@@ -303,18 +314,18 @@ def find_fwhm_analytical(dose, halfvaluex, halfvaluey, stringColor):
     fwhmx = (idx2 - idx1)*dpiResolution
     fwhmy = (idy2 - idy1)*dpiResolution
 
-    print('FWHM of ' + stringColor + ' x dose: ' + str(round(fwhmx,2)) +' mm')
-    print('FWHM of ' + stringColor + ' y dose: ' + str(round(fwhmy,2)) +' mm')
+    print('FWHM of ' + stringColor + ' x dose: ' + str(round(fwhmx,3)) +' mm')
+    print('FWHM of ' + stringColor + ' y dose: ' + str(round(fwhmy,3)) +' mm')
     return (fwhmx, fwhmy)
 
 def calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey):
     dose_background_mean_x, dose_background_mean_y = calculatebkg(dose, dose_shapex, dose_shapey )
-    maxd = np.round(np.max(dose_center),2)
-    avg = np.round(np.mean(dose_center),2)
-    mind = np.round(np.min(dose_center),2)
-    std = np.round(np.std(dose_center),2)
-    half_maximum_x = np.round((avg + dose_background_mean_x)/2,2)
-    half_maximum_y = np.round((avg + dose_background_mean_y)/2,2)
+    maxd = np.round(np.max(dose_center),3)
+    avg = np.round(np.mean(dose_center),3)
+    mind = np.round(np.min(dose_center),3)
+    std = np.round(np.std(dose_center),3)
+    half_maximum_x = np.round((avg + dose_background_mean_x)/2,3)
+    half_maximum_y = np.round((avg + dose_background_mean_y)/2,3)
     return dose_background_mean_x, dose_background_mean_y, maxd, avg, mind, std, half_maximum_x, half_maximum_y
 
 def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
@@ -361,10 +372,10 @@ def plot_projections(dose, stringcolor, stringgrafico, half_x, half_y, stringcol
     find_fwhm_analytical(dose, half_x, half_y, stringcolor)
     plt.show()
     
-def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx3ch, bkgy3ch, inverse_recalibrated_multichannel_response_curve_red, inverse_recalibrated_multichannel_response_curve_green, inverse_recalibrated_multichannel_response_curve_blue, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults):
+def dose_calculations(input_dose, color, bkgx3ch, bkgy3ch):
     if color =='3ch':
-        dose = dose_nonfiltered
-        dose_center = dose_nonfiltered
+        dose = input_dose.clip(min=0)
+        dose_center = input_dose
         bkgx=bkgx3ch
         bkgy=bkgy3ch
         maxd = np.max(dose)
@@ -378,23 +389,24 @@ def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx
         print("3 CHANNELS DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
             
     else:
-        dose_nonfiltered = dose_nonfiltered.clip(min=0)
-        filtered_median = cv2.medianBlur(netImageChannel, ksize=3)
-        filtered = scipy.signal.wiener(filtered_median, (5,5))   
+           
+        # filtered_median = cv2.medianBlur(netImageChannel, ksize=3)
+        # filtered = scipy.signal.wiener(filtered_median, (5,5))  
+        # filtered = netImageChannel.clip(min=0)
         
-        if color == 'r':
-            ############################################################################################## np.random.rand(220,220)#
-            dose = inverse_recalibrated_multichannel_response_curve_red(filtered, a_red, b_red, fitResults)
-        elif color == 'g':
-            ############################################################################################## 
-            dose = inverse_recalibrated_multichannel_response_curve_green(filtered, a_green, b_green, fitResults)
-        elif color == 'b':
-            ##############################################################################################
-            dose = inverse_recalibrated_multichannel_response_curve_blue(filtered, a_blue, b_blue, fitResults)
-        else:
-            raise Exception("error no color recognized")
+        # if color == 'r':
+        #     ############################################################################################## np.random.rand(220,220)#
+        #     dose = inverse_recalibrated_multichannel_response_curve_red(filtered, a_red, b_red, fitResults)
+        # elif color == 'g':
+        #     ############################################################################################## 
+        #     dose = inverse_recalibrated_multichannel_response_curve_green(filtered, a_green, b_green, fitResults)
+        # elif color == 'b':
+        #     ##############################################################################################
+        #     dose = inverse_recalibrated_multichannel_response_curve_blue(filtered, a_blue, b_blue, fitResults)
+        # else:
+        #     raise Exception("error no color recognized")
             
-        dose = dose.clip(min=0)
+        dose = input_dose.clip(min=0)
         dose_shapex = dose.shape[0]
         dose_shapey = dose.shape[1]
         dose_center = dose[int(dose_shapex/2) - int(dimensioneRoiPixel/2) : int(dose_shapex/2) + int(dimensioneRoiPixel/2),
@@ -402,17 +414,17 @@ def dose_calculation_with_filters(dose_nonfiltered, netImageChannel, color, bkgx
         bkgx, bkgy, maxd, avg, mind, std, half_maximum_x, half_maximum_y = calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
                             
         if color == 'r':
-            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
-            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')       
+            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
+            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')       
         elif color == 'g':
-            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
-            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')
+            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
+            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')
         elif color == 'b':
             print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
-            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n')
+            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')
         else:
             raise Exception("error no color recognized")
-    return dose, mind, maxd, avg, std, half_maximum_x, half_maximum_y, dose_center, bkgx, bkgy
+    return mind, maxd, avg, std, half_maximum_x, half_maximum_y, dose_center, bkgx, bkgy
 
 
 calibrationObjects = []

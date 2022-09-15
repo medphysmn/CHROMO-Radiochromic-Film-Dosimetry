@@ -2,13 +2,30 @@ import glob as gb
 import numpy as np
 
 #variabili d'ambiente
-path="C:/Users/Imalytics/Desktop/chromo/scansPoliProva/" #/home/pcdti1/Scrivania/gafchromicfilm/CHROMO/scansPoli/' 
-calibration_list = gb.glob(path+"CALIBRATION/calibration*")  
-unexposed_calibration_list = gb.glob(path+"CALIBRATION/unexposed_calibration*")
-treatment_list = gb.glob(path+"TREATMENT/treatment*")
-unexposed_treatment_list = gb.glob(path+"TREATMENT/unexposed_treatment*")
-maxdose_treatment_list = gb.glob(path+"TREATMENT/maxdose_treatment*")
-outputPath = path + 'OUTPUT'
+path="C:/Users/Imalytics/Desktop/chromo/" #/home/pcdti1/Scrivania/gafchromicfilm/CHROMO/scansPoli/' 
+dataPath = path + 'data/'
+denoiserFolder = path + 'denoiser/'
+denoiserPath = denoiserFolder + 'denoise.py'
+outputPath = dataPath + 'OUTPUT/'
+nonFilteredCalibrationPath = dataPath + "CALIBRATION/"
+calibrationPath = outputPath + "_CALIBRATION_FILTERED/"
+nonFilteredTreatmentPath = dataPath + "TREATMENT/"
+treatmentPath = outputPath + "_TREATMENT_FILTERED/"
+redPath = outputPath + "RED/"
+greenPath = outputPath + "GREEN/"
+bluePath = outputPath + "BLUE/"
+tchPath = outputPath + "3CH/"
+
+medianFilter = True
+medianKernel = 3
+wienerFilter = False
+wienerKernel = 3
+
+unexposed_calibration_list = gb.glob(calibrationPath + "unexposed_calibration*")
+treatment_list = gb.glob(treatmentPath + "treatment*")
+unexposed_treatment_list = gb.glob(treatmentPath + "unexposed_treatment*")
+maxdose_treatment_list = gb.glob(treatmentPath + "maxdose_treatment*")
+calibration_list = gb.glob(nonFilteredCalibrationPath+"calibration*")  
 
 maxdoseRecalibration = 6 #DOSE MASSIMA DI RICALIBRAZIONE (Gy)
 
