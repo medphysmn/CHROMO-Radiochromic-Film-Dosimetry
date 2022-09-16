@@ -1,11 +1,11 @@
 # CHROMO: a software for a FAST AND SIMPLE Radiochromic Film MULTICHANNEL DOSIMETRY
 
+A python based software used to measure radiochromic film dose using an efficient calibration and single scan recalibration method [1]. This method is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
+
 ![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190626086-d4be6463-c8da-4c30-b5a4-cdbf007e2b81.png)
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190626423-846be746-c353-45a9-86cb-7cedfd05f95c.png)
 ![response-dose_calibration_plot_3ch](https://user-images.githubusercontent.com/37676343/190626240-cdd8e9b2-7795-47c5-ae68-9ba0eb4379e1.png)
 ![dose-response_recalibrated_plot_treatment_1](https://user-images.githubusercontent.com/37676343/190626267-4b32af33-a64d-43ae-973a-4f6b99b768bf.png)
-
-A python based software used to measure radiochromic film dose using an efficient calibration and single scan recalibration method [1]. This method is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
 
 **FEATURES**:
 
