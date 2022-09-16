@@ -4,7 +4,7 @@ A python based software used to measure radiochromic film dose using an efficien
 
 **FEATURES:**
 
-- **SCAN DENOISING ** with Median and Wiener Filters** [4] [5]
+- **SCAN DENOISING ** with Median and Wiener Filters [4] [5]
 - **MULTICHANNEL DOSIMETRY** [1] 
 - **FILM CALIBRATION with rational curve** [1] 
 - CORRECTION OF LATERAL RESPONSE ARTIFACT [3] (TODO!!!)
