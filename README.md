@@ -2,7 +2,7 @@
 
 A python based software used to measure radiochromic film dose using an efficient calibration and single scan recalibration method [1]. This method is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
 
-FEATURES:
+**FEATURES**:
 
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
 - **MULTICHANNEL DOSIMETRY** [1] 
