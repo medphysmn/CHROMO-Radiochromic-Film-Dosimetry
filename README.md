@@ -2,7 +2,7 @@
 
 A python based software used to measure radiochromic film dose using an efficient **calibration** and **single scan recalibration** method [1]. This method is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
 
-![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190626086-d4be6463-c8da-4c30-b5a4-cdbf007e2b81.png)
+![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190626086-d4be6463-c8da-4c30-b5a4-cdbf007e2b81.png) { width: 2px; }
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190626423-846be746-c353-45a9-86cb-7cedfd05f95c.png)
 ![dose-response_calibration_plot_3ch](https://user-images.githubusercontent.com/37676343/190626659-9b7e6daa-48ad-4418-8d07-52ad18122762.png)
 ![dose-response_recalibrated_plot_treatment_1](https://user-images.githubusercontent.com/37676343/190626267-4b32af33-a64d-43ae-973a-4f6b99b768bf.png)
