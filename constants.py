@@ -26,9 +26,16 @@ medianFilter = True
 medianKernel = 3
 wienerFilter = False
 wienerKernel = 3
+
+monoChannelDosimetry = False
+if monoChannelDosimetry:
+    multiChannelDosimetry = False
+else:
+    multiChannelDosimetry = True
+
 plotProfilesResults = False
 
-fitFunction = 'exponential' #exponential
+fitFunction = 'rational' #exponential
 maxdoseRecalibration = 6 #DOSE MASSIMA DI RICALIBRAZIONE (Gy)
 
 resolution = 25.4
@@ -53,7 +60,7 @@ p0green1 = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 p0blue = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 p0blue1 = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 
-p0redexp = 500., 500., 300 #da cambiare eventualmente il punto iniziale
+p0redexp = -10., 200., 3.  #da cambiare eventualmente il punto iniziale
 p0red1exp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
 p0greenexp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
 p0green1exp = 500., -500., 300 #da cambiare eventualmente il punto iniziale

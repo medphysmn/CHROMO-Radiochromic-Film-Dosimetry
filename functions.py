@@ -13,6 +13,7 @@ import shutil
 
 sys.path.append(".")
 from constants import *
+from fitResultsSingleChannel import *
 
 def cleanOutputDirectory():
     try:
@@ -81,16 +82,36 @@ def recalibrated_multichannel_response_curve_red(x, a_red, b_red, fitResults):
 def inverse_recalibrated_multichannel_response_curve_red(y, a_red, b_red, fitResults):
     return (fitResults.x[1]*b_red + fitResults.x[0]*b_red*fitResults.x[2] + a_red*fitResults.x[2] - y*fitResults.x[2])/(y - a_red - fitResults.x[0]*b_red) #calcolato aniliticamente l'inverso
 #inverse_recalibrated_multichannel_response_curve_red = inversefunc(recalibrated_multichannel_response_curve_red)
-
 def recalibrated_multichannel_response_curve_green(x, a_green, b_green, fitResults):
     return a_green + b_green*multichannel_model(fitResults.x, x) 
 def inverse_recalibrated_multichannel_response_curve_green(y, a_green, b_green, fitResults):
     return (fitResults.x[1]*b_green + fitResults.x[0]*b_green*fitResults.x[2] + a_green*fitResults.x[2] - y*fitResults.x[2])/(y - a_green - fitResults.x[0]*b_green)
-
 def recalibrated_multichannel_response_curve_blue(x, a_blue, b_blue, fitResults):
     return a_blue + b_blue*multichannel_model(fitResults.x, x)
 def inverse_recalibrated_multichannel_response_curve_blue(y, a_blue, b_blue, fitResults):
     return (fitResults.x[1]*b_blue + fitResults.x[0]*b_blue*fitResults.x[2] + a_blue*fitResults.x[2] - y*fitResults.x[2])/(y - a_blue - fitResults.x[0]*b_blue) 
+
+def calculateSingleChannelDoseRed(y, fitResultsSingle):
+    if fitFunction=='rational':
+        return (fitResultsSingle.redFit[1] + fitResultsSingle.redFit[0]*fitResultsSingle.redFit[2] - y*fitResultsSingle.redFit[2])/(y-fitResultsSingle.redFit[0]) 
+    elif fitFunction=='exponential':
+        return (fitResultsSingle.redFit[0]*np.exp(-y/fitResultsSingle.redFit[1]) + fitResultsSingle.redFit[2])
+    else:
+        raise Exception("Choose a valid fitting function: rational or exponential")
+def calculateSingleChannelDoseGreen(y, fitResultsSingle):
+    if fitFunction=='rational':
+        return (fitResultsSingle.greenFit[1] + fitResultsSingle.greenFit[0]*fitResultsSingle.greenFit[2] - y*fitResultsSingle.greenFit[2])/(y-fitResultsSingle.greenFit[0]) 
+    elif fitFunction=='exponential':
+        return (fitResultsSingle.greenFit[0]*np.exp(-y/fitResultsSingle.greenFit[1]) + fitResultsSingle.greenFit[2])
+    else:
+        raise Exception("Choose a valid fitting function: rational or exponential")
+def calculateSingleChannelDoseBlue(y, fitResultsSingle):
+    if fitFunction=='rational':
+        return (fitResultsSingle.blueFit[1] + fitResultsSingle.blueFit[0]*fitResultsSingle.blueFit[2] - y*fitResultsSingle.blueFit[2])/(y-fitResultsSingle.blueFit[0]) 
+    elif fitFunction=='exponential':
+        return (fitResultsSingle.blueFit[0]*np.exp(-y/fitResultsSingle.blueFit[1]) + fitResultsSingle.blueFit[2])
+    else:
+        raise Exception("Choose a valid fitting function: rational or exponential")                    
 
 def averageImages(images):
     sumIm = 0
@@ -151,19 +172,22 @@ def projectionSingle(image):
     xprofile = image[int(sizex/2) , :]
     return(xprofile, yprofile)
 
-def plotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue):
+def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue):
+    
     
     d = np.linspace(np.min(calibration_dose), np.max(calibration_dose))
     r = np.linspace(np.min(calibration_red), np.max(calibration_red))
     g = np.linspace(np.min(calibration_green), np.max(calibration_green))
     b = np.linspace(np.min(calibration_blue), np.max(calibration_blue))
+    x_max_lsmodel = 0 
+    y_calibration_fit = []
     
     #RED CURVES
     if fitFunction == 'rational':
         poptRed = curve_fit(rational, calibration_dose, calibration_red, p0red, maxfev=1000)[0]
         plt.plot(d, rational(d, *poptRed), 'r-', label='fitted ' + fitFunction + ' model')
     if fitFunction == 'exponential':
-        poptRed = curve_fit(exponential, calibration_dose, calibration_red, p0red, maxfev=100000)[0]
+        poptRed = curve_fit(exponential, calibration_dose, calibration_red, p0redexp, maxfev=100000)[0]
         plt.plot(d, exponential(d, *poptRed), 'r-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
     plt.xlabel("DOSE (Gy)")
@@ -238,50 +262,54 @@ def plotCurves(calibration_dose, calibration_red, calibration_green, calibration
     plt.legend(loc='upper right')
     plt.savefig(bluePath + "/response-dose_calibration_plot_blue.png", format='png')
     plt.show()
-
-    #MULTICHANNELCURVES
-    xi = np.append(np.asanyarray(calibration_red), np.asanyarray(calibration_green))
-    x = np.append(xi, np.asanyarray(calibration_blue))
-    yi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
-    y = np.append(yi, np.asanyarray(calibration_dose))
-
-    fitResults_inv = least_squares(multichannel_function_inverse, a0multichannel, jac=jac_inverse, method='lm', args=(x, y), max_nfev=1000000000, verbose=1)
-    fitResults_inv.x
-
-    x_calibration_fit = np.linspace(min(x), max(x))
-    y_calibration_fit = multichannel_model_inverse(fitResults_inv.x, x_calibration_fit)
-    plt.scatter(calibration_red, calibration_dose, color='red', label='red data')
-    plt.scatter(calibration_green, calibration_dose,color='green', label='green data')
-    plt.scatter(calibration_blue, calibration_dose, color='blue', label='blue data')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
-    plt.xlabel("RESPONSE (OD)")
-    plt.ylabel("DOSE (Gy)")
-    plt.legend(loc='upper right')
-    plt.savefig(tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
-    plt.show()
     
-    xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
-    x = np.append( xi, np.asanyarray(calibration_dose))
-    x_max_lsmodel = max(x)
-
-    yi = np.append(np.asanyarray(calibration_red), np.asanyarray(calibration_green))
-    y = np.append( yi, np.asanyarray(calibration_blue))
+    fitResults = fitResultsSingleChannel(poptRedInverse, poptGreenInverse, poptBlueInverse)
     
-    fitResults = least_squares(multichannel_function, a0multichannel1, jac=jac, args=(x, y), verbose=1)
-    fitResults.x
+    if multiChannelDosimetry:
+        
+        #MULTICHANNELCURVES
+        xi = np.append(np.asanyarray(calibration_red), np.asanyarray(calibration_green))
+        x = np.append(xi, np.asanyarray(calibration_blue))
+        yi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
+        y = np.append(yi, np.asanyarray(calibration_dose))
     
-    x_calibration_fit = np.linspace(0, x_max_lsmodel)
-    y_calibration_fit = multichannel_model(fitResults.x, x_calibration_fit)
-
-    plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
-    plt.scatter(calibration_dose, calibration_green, color='green', label='green data')
-    plt.scatter(calibration_dose, calibration_blue, color='blue', label='blue data')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
-    plt.xlabel("DOSE (Gy)")
-    plt.ylabel("RESPONSE (OD)")
-    plt.legend(loc='upper right')
-    plt.savefig(tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
-    plt.show()
+        fitResults_inv = least_squares(multichannel_function_inverse, a0multichannel, jac=jac_inverse, method='lm', args=(x, y), max_nfev=1000000000, verbose=1)
+        fitResults_inv.x
+    
+        x_calibration_fit = np.linspace(min(x), max(x))
+        y_calibration_fit = multichannel_model_inverse(fitResults_inv.x, x_calibration_fit)
+        plt.scatter(calibration_red, calibration_dose, color='red', label='red data')
+        plt.scatter(calibration_green, calibration_dose,color='green', label='green data')
+        plt.scatter(calibration_blue, calibration_dose, color='blue', label='blue data')
+        plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
+        plt.xlabel("RESPONSE (OD)")
+        plt.ylabel("DOSE (Gy)")
+        plt.legend(loc='upper right')
+        plt.savefig(tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
+        plt.show()
+        
+        xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
+        x = np.append( xi, np.asanyarray(calibration_dose))
+        x_max_lsmodel = max(x)
+    
+        yi = np.append(np.asanyarray(calibration_red), np.asanyarray(calibration_green))
+        y = np.append( yi, np.asanyarray(calibration_blue))
+        
+        fitResults = least_squares(multichannel_function, a0multichannel1, jac=jac, args=(x, y), verbose=1)
+        fitResults.x
+        
+        x_calibration_fit = np.linspace(0, x_max_lsmodel)
+        y_calibration_fit = multichannel_model(fitResults.x, x_calibration_fit)
+    
+        plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
+        plt.scatter(calibration_dose, calibration_green, color='green', label='green data')
+        plt.scatter(calibration_dose, calibration_blue, color='blue', label='blue data')
+        plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
+        plt.xlabel("DOSE (Gy)")
+        plt.ylabel("RESPONSE (OD)")
+        plt.legend(loc='upper right')
+        plt.savefig(tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
+        plt.show()
     
     return fitResults, x_max_lsmodel, y_calibration_fit
 
@@ -365,7 +393,7 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
     plt.figure()
     c = plt.contourf(xx, yy, dose, cmap=cmap, levels=levels)
     plt.colorbar(c, label="Dose (Gy)")
-    plt.title(stringcolor + " dose recalibrated calculation")
+    plt.title(stringcolor + " dose")
     plt.xlabel("x (mm)")
     plt.ylabel("y (mm)")
     plt.axis("scaled")
@@ -406,7 +434,6 @@ def dose_calculations(input_dose, color, bkgx3ch, bkgy3ch):
         std = np.std(dose)
         half_maximum_x = (avg + bkgx3ch)/2
         half_maximum_y = (avg + bkgy3ch)/2
-
         print("3 CHANNELS DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
         print("3 CHANNELS DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
             
@@ -433,14 +460,29 @@ def dose_calculations(input_dose, color, bkgx3ch, bkgy3ch):
         bkgx, bkgy, maxd, avg, mind, std, half_maximum_x, half_maximum_y = calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
                             
         if color == 'r':
-            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
-            print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')       
+            if multiChannelDosimetry:
+                print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
+                print("RED CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')       
+            else:
+                print("RED CHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: mean dose at center = %0.01f Gy" % (avg))
+                print("RED CHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
+
         elif color == 'g':
-            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
-            print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')
+            if multiChannelDosimetry:
+                print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
+                print("GREEN CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')       
+            else:
+                print("GREEN CHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: mean dose at center = %0.01f Gy" % (avg))
+                print("GREENCHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
+
         elif color == 'b':
-            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.01f Gy" % (avg))
-            print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')
+            if multiChannelDosimetry:
+                print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: mean dose at center = %0.001f Gy" % (avg))
+                print("BLUE CHANNEL DOSIMETRY WITH RECALIBRATION METHOD: standard deviation of dose = %0.001f Gy" % (std), '\n')       
+            else:
+                print("BLUE CHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: mean dose at center = %0.01f Gy" % (avg))
+                print("BLUE CHANNEL DOSIMETRY WITH SINGLE CHANNEL METHOD: standard deviation of dose = %0.01f Gy" % (std), '\n') 
+
         else:
             raise Exception("error no color recognized")
     return mind, maxd, avg, std, half_maximum_x, half_maximum_y, dose_center, bkgx, bkgy
@@ -454,6 +496,7 @@ redDosObjArr = []
 greenDosObjArr = []
 blueDosObjArr = []
 trheechDosObjArr = []
+
 
 
 
