@@ -9,34 +9,28 @@ import cv2
 import scipy
 import math 
 import os
+import shutil
 
 sys.path.append(".")
 from constants import *
 
 def cleanOutputDirectory():
-    files = gb.glob(redPath +'*')
-    for f in files:
-        os.remove(f)
-        
-    files = gb.glob(greenPath +'*')
-    for f in files:
-        os.remove(f)
-        
-    files = gb.glob(bluePath +'*')    
-    for f in files:
-        os.remove(f) 
-        
-    files = gb.glob(tchPath +'*')
-    for f in files:
-        os.remove(f) 
-        
-    files = gb.glob(calibrationPath +'*')
-    for f in files:
-            os.remove(f)   
-            
-    files = gb.glob(treatmentPath +'*')
-    for f in files:
-            os.remove(f)
+    try:
+        shutil.rmtree(os.path.join(dataPath, 'OUTPUT'))
+    except:
+        ...
+
+def createOutputDirectories():
+    try:
+        os.mkdir(os.path.join(dataPath, 'OUTPUT'))
+        os.mkdir(os.path.join(outputPath, '_CALIBRATION_FILTERED'))
+        os.mkdir(os.path.join(outputPath, '_TREATMENT_FILTERED'))
+        os.mkdir(os.path.join(outputPath, '3CH'))
+        os.mkdir(os.path.join(outputPath, 'BLUE'))
+        os.mkdir(os.path.join(outputPath, 'GREEN'))
+        os.mkdir(os.path.join(outputPath, 'RED'))
+    except:
+        ...
             
 def a_recalibration(yp1, yp2, y1, y2):
     return (y2*yp1-y1*yp2)/(y2-y1)

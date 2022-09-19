@@ -12,8 +12,8 @@ import warnings
 import sys
 from scipy.optimize import *
 from scipy.interpolate import *
-from scipy.signal import medfilt, wiener
-from shutil import move
+from shutil import move, copyfile
+import os
 
 sys.path.append(".")
 from constants import *
@@ -22,39 +22,59 @@ from doseClass import *
 from calibrationClass import *
 
 cleanOutputDirectory()
+createOutputDirectories()
 warnings.filterwarnings("ignore")
 
 if medianFilter == True:
     print('Starting denoising of calibration images with median filter...')
     denoiserArg1 = '-d ' + nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
-    runfile(denoiserPath, wdir=denoiserFolder, args=denoiserArg1)
+    os.system(denoiserPath + " " + denoiserArg1)
     for file in os.listdir(denoiserFolder):
         if(file.endswith(".tif")):
             move(file,calibrationPath)
+    for file1 in os.listdir(path):
+        if(file1.endswith(".tif")):
+            move(file1,calibrationPath)
     
     print('Starting denoising of treatment images with median filter...')     
     denoiserArg2 = '-d ' + nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
-    runfile(denoiserPath, wdir=denoiserFolder, args=denoiserArg2)
+    os.system(denoiserPath + " " + denoiserArg2)
     for file in os.listdir(denoiserFolder):
         if(file.endswith(".tif")):
             move(file,treatmentPath)
-            
+    for file1 in os.listdir(path):
+        if(file1.endswith(".tif")):
+            move(file1,treatmentPath)
+else:
+    for fileNonFilteredCalibration in os.listdir(nonFilteredCalibrationPath):
+        copyfile(fileNonFilteredCalibration, calibrationPath)
+    for fileNonFilteredTreatment in os.listdir(nonFilteredTreatmentPath):
+            copyfile(fileNonFilteredTreatment, treatmentPath)
+
 if wienerFilter == True:
     print('Starting denoising of calibration images with wiener filter...')
     denoiserArg3 = '-d ' + calibrationPath + ' -f wiener -k ' + str(wienerKernel)
-    runfile(denoiserPath, wdir=denoiserFolder, args=denoiserArg3)
+    os.system(denoiserPath + " " + denoiserArg3)
     for file in os.listdir(denoiserFolder):
         if(file.endswith(".tif")):
-            dest = os.path.join(calibrationPath,file)
-            move(file, dest)
+            dest0 = os.path.join(calibrationPath,file)
+            move(file, dest0)
+    for file1 in os.listdir(path):
+        if(file1.endswith(".tif")):
+            dest1 = os.path.join(calibrationPath,file1)
+            move(file1, dest1)
 
     print('Starting denoising of treatment images with wiener filter...')     
     denoiserArg4 = '-d ' + treatmentPath + ' -f wiener -k ' + str(wienerKernel)
-    runfile(denoiserPath, wdir=denoiserFolder, args=denoiserArg4)
+    os.system(denoiserPath + " " + denoiserArg4)
     for file in os.listdir(denoiserFolder):
         if(file.endswith(".tif")):
-            dest1 = os.path.join(treatmentPath, file)
-            move(file, dest1)
+            dest2 = os.path.join(treatmentPath, file)
+            move(file, dest2)
+    for file1 in os.listdir(path):
+        if(file1.endswith(".tif")):
+            dest3 = os.path.join(treatmentPath,file1)
+            move(file1, dest3)
 
 for unexposed_filepath in unexposed_calibration_list:
     try:
@@ -124,9 +144,10 @@ for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm, threechDosObjTrm) in enu
     plot_dose((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum)
     plt.show()
     
-    plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:')
-    plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
-    plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
-    plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
+    if plotProfilesResults == True:
+        plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:')
+        plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
+        plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
+        plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
 
 os._exit(00)

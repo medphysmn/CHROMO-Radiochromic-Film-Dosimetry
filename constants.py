@@ -2,7 +2,7 @@ import glob as gb
 import numpy as np
 
 #variabili d'ambiente
-path="C:/Users/Imalytics/Desktop/chromo/" #/home/pcdti1/Scrivania/gafchromicfilm/CHROMO/scansPoli/' 
+path= '/home/pcdti1/Scrivania/chromo/CHROMO/' #"C:/Users/Imalytics/Desktop/chromo/" # 
 dataPath = path + 'data/'
 denoiserFolder = path + 'denoiser/'
 denoiserPath = denoiserFolder + 'denoise.py'
@@ -16,16 +16,18 @@ greenPath = outputPath + "GREEN/"
 bluePath = outputPath + "BLUE/"
 tchPath = outputPath + "3CH/"
 
-medianFilter = True
-medianKernel = 3
-wienerFilter = False
-wienerKernel = 3
-
 unexposed_calibration_list = gb.glob(calibrationPath + "unexposed_calibration*")
 treatment_list = gb.glob(treatmentPath + "treatment*")
 unexposed_treatment_list = gb.glob(treatmentPath + "unexposed_treatment*")
 maxdose_treatment_list = gb.glob(treatmentPath + "maxdose_treatment*")
 calibration_list = gb.glob(nonFilteredCalibrationPath+"calibration*")  
+
+medianFilter = True
+medianKernel = 3
+wienerFilter = False
+wienerKernel = 3
+
+plotProfilesResults = False
 
 maxdoseRecalibration = 6 #DOSE MASSIMA DI RICALIBRAZIONE (Gy)
 
