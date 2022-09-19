@@ -11,7 +11,7 @@ A python based software used to measure radiochromic film dose using an efficien
 **FEATURES**:
 
 - **MULTICHANNEL DOSIMETRY** [1] 
-- **MONOCHANNEL DOSIMETRY** (TODO)
+- **MONOCHANNEL DOSIMETRY** (TODO esponenziale da aggiustare inversa e dosimetria)
 - **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] (TODO aggiunta esponenziale e razionale, metterne altre)
 - **INTRA SCAN RECALIBRATION** [1]
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
