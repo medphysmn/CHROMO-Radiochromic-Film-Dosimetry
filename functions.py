@@ -44,6 +44,12 @@ def rational(x, a, b, c):
 def rational_inverse(x, a, b, c):
     return (b +a*c - x*c)/(x-a)
 
+def exponential(x, a, b, c):
+    return (a*np.exp(-x/b) + c)
+
+def exponential_inverse(x, a, b, c):
+    return (a*np.exp(-x/b) + c) #(np.log(((a)/(x-a*c))**b)) TODO ORA È SEMPLICE ESPONENZIALE MA DOVRESTI FARE L'INVERSA
+
 def multichannel_model(a, x):
     return a[0] + a[1]/(x+a[2])
 
@@ -153,60 +159,84 @@ def plotCurves(calibration_dose, calibration_red, calibration_green, calibration
     b = np.linspace(np.min(calibration_blue), np.max(calibration_blue))
     
     #RED CURVES
-    poptRed = curve_fit(rational, calibration_dose, calibration_red, p0red, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptRed = curve_fit(rational, calibration_dose, calibration_red, p0red, maxfev=1000)[0]
+        plt.plot(d, rational(d, *poptRed), 'r-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptRed = curve_fit(exponential, calibration_dose, calibration_red, p0red, maxfev=100000)[0]
+        plt.plot(d, exponential(d, *poptRed), 'r-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
-    plt.plot(d, rational(d, *poptRed), 'r-', label='fitted rational model')
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("RESPONSE (OD)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/RED/dose-response_calibration_plot_red.png", format='png')
+    plt.savefig(redPath + "/dose-response_calibration_plot_red.png", format='png')
     plt.show()
 
-    poptRedInverse = curve_fit(rational_inverse, calibration_red, calibration_dose, p0red1, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptRedInverse = curve_fit(rational_inverse, calibration_red, calibration_dose, p0red1, maxfev=1000)[0]
+        plt.plot(r, rational_inverse(r, *poptRedInverse), 'r-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptRedInverse = curve_fit(exponential_inverse, calibration_red, calibration_dose, p0red1exp, maxfev=100000)[0]
+        plt.plot(r, exponential_inverse(r, *poptRedInverse), 'r-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_red, calibration_dose, color='red', label='red data')
-    plt.plot(r, rational_inverse(r, *poptRedInverse), 'r-', label='fitted rational model')
     plt.xlabel("RESPONSE (OD)")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/RED/response-dose_calibration_plot_red.png", format='png')
+    plt.savefig(redPath + "/response-dose_calibration_plot_red.png", format='png')
     plt.show()
 
     #GREEN CURVES
-    poptGreen = curve_fit(rational, calibration_dose, calibration_green, p0green, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptGreen = curve_fit(rational, calibration_dose, calibration_green, p0green, maxfev=1000)[0]
+        plt.plot(d, rational(d, *poptGreen), 'g-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptGreen = curve_fit(exponential, calibration_dose, calibration_green, p0greenexp, maxfev=100000)[0]
+        plt.plot(d, exponential(d, *poptGreen), 'g-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_dose, calibration_green, color='green', label='green data')
-    plt.plot(d, rational(d, *poptGreen), 'g-', label='fitted rational model')
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("RESPONSE (OD)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/GREEN/dose-response_calibration_plot_green.png", format='png')
+    plt.savefig(greenPath + "/dose-response_calibration_plot_green.png", format='png')
     plt.show()
 
-    poptGreenInverse = curve_fit(rational_inverse, calibration_green, calibration_dose, p0green1, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptGreenInverse = curve_fit(rational_inverse, calibration_green, calibration_dose, p0green1, maxfev=1000)[0]
+        plt.plot(g, rational_inverse(g, *poptGreenInverse), 'g-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptGreenInverse = curve_fit(exponential_inverse, calibration_green, calibration_dose, p0green1exp, maxfev=100000)[0]
+        plt.plot(g, exponential_inverse(g, *poptGreenInverse), 'g-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_green, calibration_dose, color='green', label='green data')
-    plt.plot(g, rational_inverse(g, *poptGreenInverse), 'g-', label='fitted rational model')
     plt.xlabel("RESPONSE (OD)")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/GREEN/response-dose_calibration_plot_green.png", format='png')
+    plt.savefig(greenPath + "/response-dose_calibration_plot_green.png", format='png')
     plt.show()
 
     #BLUE CURVES
-    poptBlue = curve_fit(rational, calibration_dose, calibration_blue, p0blue, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptBlue = curve_fit(rational, calibration_dose, calibration_blue, p0blue, maxfev=1000)[0]
+        plt.plot(d, rational(d, *poptBlue), 'b-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptBlue = curve_fit(exponential, calibration_dose, calibration_blue, p0blueexp, maxfev=100000)[0]
+        plt.plot(d, exponential(d, *poptBlue), 'b-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_dose, calibration_blue, color='blue', label='blue data')
-    plt.plot(d, rational(d, *poptBlue), 'b-', label='fitted rational model')
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("RESPONSE (OD)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/BLUE/dose-response_calibration_plot_blue.png", format='png')
+    plt.savefig(bluePath + "/dose-response_calibration_plot_blue.png", format='png')
     plt.show()
 
-    poptBlueInverse = curve_fit(rational_inverse, calibration_blue, calibration_dose, p0blue1, maxfev=1000)[0]
+    if fitFunction == 'rational':
+        poptBlueInverse = curve_fit(rational_inverse, calibration_blue, calibration_dose, p0blue1, maxfev=1000)[0]
+        plt.plot(b, rational_inverse(b, *poptBlueInverse), 'b-', label='fitted ' + fitFunction + ' model')
+    if fitFunction == 'exponential':
+        poptBlueInverse = curve_fit(exponential_inverse, calibration_blue, calibration_dose, p0blue1exp, maxfev=100000)[0]
+        plt.plot(b, exponential_inverse(b, *poptBlueInverse), 'b-', label='fitted ' + fitFunction + ' model')
     plt.scatter(calibration_blue, calibration_dose, color='blue', label='blue data')
-    plt.plot(b, rational_inverse(b, *poptBlueInverse), 'b-', label='fitted rational model')
     plt.xlabel("RESPONSE (OD)")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/BLUE/response-dose_calibration_plot_blue.png", format='png')
+    plt.savefig(bluePath + "/response-dose_calibration_plot_blue.png", format='png')
     plt.show()
 
     #MULTICHANNELCURVES
@@ -223,11 +253,11 @@ def plotCurves(calibration_dose, calibration_red, calibration_green, calibration
     plt.scatter(calibration_red, calibration_dose, color='red', label='red data')
     plt.scatter(calibration_green, calibration_dose,color='green', label='green data')
     plt.scatter(calibration_blue, calibration_dose, color='blue', label='blue data')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS rational model', ls='dashed')
+    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
     plt.xlabel("RESPONSE (OD)")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/3CH/response-dose_calibration_plot_3ch.png", format='png')
+    plt.savefig(tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
     plt.show()
     
     xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
@@ -242,17 +272,15 @@ def plotCurves(calibration_dose, calibration_red, calibration_green, calibration
     
     x_calibration_fit = np.linspace(0, x_max_lsmodel)
     y_calibration_fit = multichannel_model(fitResults.x, x_calibration_fit)
-    # x_calibration_fit_shrink = np.linspace(0, maxdoseRecalibration)
-    # y_calibration_fit_shrink = multichannel_model(fitResults.x, x_calibration_fit_shrink)
 
     plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
     plt.scatter(calibration_dose, calibration_green, color='green', label='green data')
     plt.scatter(calibration_dose, calibration_blue, color='blue', label='blue data')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS rational model', ls='dashed')
+    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("RESPONSE (OD)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/3CH/dose-response_calibration_plot_3ch.png", format='png')
+    plt.savefig(tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
     plt.show()
     
     return fitResults, x_max_lsmodel, y_calibration_fit
@@ -268,14 +296,14 @@ def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recali
     plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationRed, color='purple')
     plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationGreen, color='lime')
     plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationBlue, color='dodgerblue')
-    plt.plot(x_calibration_fit, y_calibration_fit_red, 'purple', label='recalibrated RED rational model')
-    plt.plot(x_calibration_fit, y_calibration_fit_green, 'lime', label='recalibrated GREEN rational model')
-    plt.plot(x_calibration_fit, y_calibration_fit_blue, 'dodgerblue', label= 'recalibrated BLUE rational model')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS rational model', ls='dashed')
+    plt.plot(x_calibration_fit, y_calibration_fit_red, 'purple', label='recalibrated RED ' + fitFunction + ' model')
+    plt.plot(x_calibration_fit, y_calibration_fit_green, 'lime', label='recalibrated GREEN ' + fitFunction + ' model')
+    plt.plot(x_calibration_fit, y_calibration_fit_blue, 'dodgerblue', label= 'recalibrated BLUE ' + fitFunction + ' model')
+    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("RESPONSE (OD)")
     plt.legend(loc='upper right')
-    plt.savefig(outputPath + "/3CH/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
+    plt.savefig(tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
     plt.show()
 
 def calibration_factors_calculator(zeroResponse, maxdoseResponse, fitResults):
@@ -389,13 +417,10 @@ def dose_calculations(input_dose, color, bkgx3ch, bkgy3ch):
         # filtered = netImageChannel.clip(min=0)
         
         # if color == 'r':
-        #     ############################################################################################## np.random.rand(220,220)#
         #     dose = inverse_recalibrated_multichannel_response_curve_red(filtered, a_red, b_red, fitResults)
         # elif color == 'g':
-        #     ############################################################################################## 
         #     dose = inverse_recalibrated_multichannel_response_curve_green(filtered, a_green, b_green, fitResults)
         # elif color == 'b':
-        #     ##############################################################################################
         #     dose = inverse_recalibrated_multichannel_response_curve_blue(filtered, a_blue, b_blue, fitResults)
         # else:
         #     raise Exception("error no color recognized")

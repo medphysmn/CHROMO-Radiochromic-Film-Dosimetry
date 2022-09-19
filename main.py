@@ -2,7 +2,8 @@
 # coding: utf-8
 
 #TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
-#WEINER
+#TODO ORA IL CALCOLO DELLA DOSE E CON METODO RAZIONALE MULTICANALE POI RICALIBRATO MA SEMPRE RAZIONALE
+#BISOGNEREBBE METTERE LA POSSIBILITA DI NON UTILIZZARE IL METODO DELLA RICALIBRAZIONE MA ANCHE SEMPLICE DOSIMETRIA MONOCANALE CON DIVERSE FUNZIONI ES RAZIONALE ESPONENZIALE ECC..
 import scipy
 import numpy as np
 import re
@@ -149,5 +150,3 @@ for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm, threechDosObjTrm) in enu
         plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
         plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
         plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
-
-os._exit(00)

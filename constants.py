@@ -26,9 +26,9 @@ medianFilter = True
 medianKernel = 3
 wienerFilter = False
 wienerKernel = 3
-
 plotProfilesResults = False
 
+fitFunction = 'exponential' #exponential
 maxdoseRecalibration = 6 #DOSE MASSIMA DI RICALIBRAZIONE (Gy)
 
 resolution = 25.4
@@ -52,5 +52,13 @@ p0green = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 p0green1 = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 p0blue = -10., 300., 3. #da cambiare eventualmente il punto iniziale
 p0blue1 = -10., 300., 3. #da cambiare eventualmente il punto iniziale
+
+p0redexp = 500., 500., 300 #da cambiare eventualmente il punto iniziale
+p0red1exp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
+p0greenexp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
+p0green1exp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
+p0blueexp = 500., -150., 300 #da cambiare eventualmente il punto iniziale
+p0blue1exp = 500., -500., 300 #da cambiare eventualmente il punto iniziale
+
 a0multichannel = np.array([0, 1000, 5]) #da cambiare eventualmente il punto iniziale
 a0multichannel1 = np.array([-10, 200, 3]) #da cambiare eventualmente il punto iniziale
