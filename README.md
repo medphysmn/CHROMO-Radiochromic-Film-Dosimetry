@@ -2,10 +2,10 @@
 
 A python based software used to measure radiochromic film dose using an efficient **calibration** and **single scan recalibration** method [1]. This method [1] is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
 
-![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
-![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190628154-678fc275-1263-4095-b27c-98fac5691747.png)
 ![dose-response_calibration_plot_red](https://user-images.githubusercontent.com/37676343/191227455-aba872ef-43cf-4fc7-ad5e-0ad860e37411.png)
 ![dose-response_calibration_plot_green](https://user-images.githubusercontent.com/37676343/191227313-f72668c1-4ca2-4127-b2cd-e294b1c500bd.png)
+![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
+![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190628154-678fc275-1263-4095-b27c-98fac5691747.png)
 ![dose-response_calibration_plot_3ch(1)](https://user-images.githubusercontent.com/37676343/191226861-a331e1ea-7804-404c-9c58-ba43f3944332.png)
 ![dose-response_recalibrated_plot_treatment_2](https://user-images.githubusercontent.com/37676343/191227612-cddfd84e-67dc-4c22-9c22-806d8f53333f.png)
 
