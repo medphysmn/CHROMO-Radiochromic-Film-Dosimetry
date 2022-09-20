@@ -94,7 +94,7 @@ calibration_red = [x.calibrationRed for x in calibrationObjects]
 calibration_green = [x.calibrationGreen for x in calibrationObjects]
 calibration_blue = [x.calibrationBlue for x in calibrationObjects]
       
-if monoChannelDosimetry:
+if singleChannelDosimetry:
     
     fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue)
 
@@ -106,15 +106,15 @@ if monoChannelDosimetry:
         image = cv2.imread(scan_filepath)
         netImage = image
         
-        dose_red =  calculateSingleChannelDoseRed(netImage[:,:,redChannel], fitResults).clip(min=0)
+        dose_red =  calculateSingleChannelDose(netImage[:,:,redChannel], fitResults.redFit).clip(min=0)
         min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred = dose_calculations(dose_red, 'r', 0, 0)
         redDosObjArr.append(doseClass(dose_red, min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred))
         
-        dose_green =  calculateSingleChannelDoseGreen(netImage[:,:,greenChannel], fitResults).clip(min=0)
+        dose_green =  calculateSingleChannelDose(netImage[:,:,greenChannel], fitResults.greenFit).clip(min=0)
         min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen = dose_calculations(dose_green, 'g', 0, 0)
         greenDosObjArr.append(doseClass(dose_green, min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen))    
         
-        dose_blue =  calculateSingleChannelDoseBlue(netImage[:,:,blueChannel], fitResults).clip(min=0)
+        dose_blue =  calculateSingleChannelDose(netImage[:,:,blueChannel], fitResults.blueFit).clip(min=0)
         min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue = dose_calculations(dose_blue, 'b', 0, 0)
         blueDosObjArr.append(doseClass(dose_blue, min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue))  
         
