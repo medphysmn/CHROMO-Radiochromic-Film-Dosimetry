@@ -10,19 +10,16 @@ A python based software used to measure radiochromic film dose using an efficien
 
 **FEATURES**:
 
-- **MULTICHANNEL DOSIMETRY** [1] 
-- **MONOCHANNEL DOSIMETRY** (TODO esponenziale da aggiustare inversa e dosimetria)
-- **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] (TODO aggiunta esponenziale e razionale, metterne altre)
-- **INTRA SCAN RECALIBRATION** [1]
+- **MULTI-CHANNEL DOSIMETRY** of multiple scans at the same time [1] [2] 
+- **SINGLE-CHANNEL DOSIMETRY** of multiple scans at the same time [2]
+- **DOSIMETRY WITH FAST INTRA SCAN RECALIBRATION METHOD** of multiple scans at the same time [1] [2]
+- **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] 
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
 - **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] (TODO)
 - **RESULT DOSE IMAGES IN DIFFERENT FORMATS**
 - **PLOTS OF THE RESULTS**
-- **DOSIMETRY OF MULTIPLE SCANS AT THE SAME TIME**
 
 sudo chmod 777 denoiser.py
-
-NO WARRANTY, USE AT OWN RISK.
 
 [1] Lewis D, Micke A, Yu X, Chan MF. An efficient protocol for radiochromic film dosimetry combining calibration and measurement in a single scan. Med Phys. 2012 Oct;39(10):6339-50. doi: 10.1118/1.4754797. PMID: 23039670; PMCID: PMC9381144.
 
@@ -33,4 +30,6 @@ NO WARRANTY, USE AT OWN RISK.
 [4] Devic, Slobodan & Tomic, Nada & Soares, Célia & Podgorsak, Ervin. (2009). Optimizing the Dynamic Range Extension of a Radiochromic Film Dosimetry System. Medical physics. 36. 429-37. 10.1118/1.3049597. 
 
 [5] Méndez, Ignasi & Rovira-Escutia, Juan & Casar, Bozidar. (2021). A protocol for accurate radiochromic film dosimetry using Radiochromic.com. Radiology and Oncology. 55. 369-378. 10.2478/raon-2021-0034. 
+
+NO WARRANTY, USE AT OWN RISK.
 
