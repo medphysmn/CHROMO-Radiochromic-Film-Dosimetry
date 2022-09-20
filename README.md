@@ -4,7 +4,7 @@ A python based software used to measure radiochromic film dose using an efficien
 
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
 ![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190628154-678fc275-1263-4095-b27c-98fac5691747.png)
-![dose-response_calibration_plot_3ch](https://user-images.githubusercontent.com/37676343/190628157-72492559-090b-4a2d-afe7-11849411fe10.png)
+![dose-response_calibration_plot_3ch](https://user-images.githubusercontent.com/37676343/191226479-07865ec4-4e3a-4ebe-ac49-8ba509f119a4.png)
 ![dose-response_recalibrated_plot_treatment_1](https://user-images.githubusercontent.com/37676343/190628158-6697023a-e6f1-40ad-b349-cd3728982d0a.png)
 
 
