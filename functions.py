@@ -10,28 +10,37 @@ import scipy
 import math 
 import os
 import shutil
-
+from tkinter import Tk, filedialog
 sys.path.append(".")
 from constants import *
+
 from fitResultsSingleChannel import *
 
-def cleanOutputDirectory():
+def cleanOutputDirectory(root):
     try:
-        shutil.rmtree(os.path.join(dataPath, 'OUTPUT'))
+        shutil.rmtree(os.path.join(root.dataPath, 'OUTPUT'))
     except:
         ...
 
-def createOutputDirectories():
+def createOutputDirectories(root):
     try:
-        os.mkdir(os.path.join(dataPath, 'OUTPUT'))
-        os.mkdir(os.path.join(outputPath, '_CALIBRATION_FILTERED'))
-        os.mkdir(os.path.join(outputPath, '_TREATMENT_FILTERED'))
-        os.mkdir(os.path.join(outputPath, '3CH'))
-        os.mkdir(os.path.join(outputPath, 'BLUE'))
-        os.mkdir(os.path.join(outputPath, 'GREEN'))
-        os.mkdir(os.path.join(outputPath, 'RED'))
+        os.mkdir(os.path.join(root.dataPath, 'OUTPUT'))
+        os.mkdir(os.path.join(root.outputPath, '_CALIBRATION_FILTERED'))
+        os.mkdir(os.path.join(root.outputPath, '_TREATMENT_FILTERED'))
+        os.mkdir(os.path.join(root.outputPath, '3CH'))
+        os.mkdir(os.path.join(root.outputPath, 'BLUE'))
+        os.mkdir(os.path.join(root.outputPath, 'GREEN'))
+        os.mkdir(os.path.join(root.outputPath, 'RED'))
     except:
         ...
+ 
+def selectDirectory():
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)
+    path = filedialog.askdirectory(title='select root folder') + '/'
+    
+    return path
             
 def a_recalibration(yp1, yp2, y1, y2):
     return (y2*yp1-y1*yp2)/(y2-y1)
@@ -160,7 +169,7 @@ def projectionSingle(image):
     xprofile = image[int(sizex/2) , :]
     return(xprofile, yprofile)
 
-def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue):
+def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue, root):
     
     d = np.linspace(np.min(calibration_dose), np.max(calibration_dose))
     r = np.linspace(np.min(calibration_red), np.max(calibration_red))
@@ -180,7 +189,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(redPath + "/dose-response_calibration_plot_red.png", format='png')
+    plt.savefig(root.redPath + "/dose-response_calibration_plot_red.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -193,7 +202,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(redPath + "/response-dose_calibration_plot_red.png", format='png')
+    plt.savefig(root.redPath + "/response-dose_calibration_plot_red.png", format='png')
     plt.show()
 
     #GREEN CURVES
@@ -207,7 +216,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(greenPath + "/dose-response_calibration_plot_green.png", format='png')
+    plt.savefig(root.greenPath + "/dose-response_calibration_plot_green.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -220,7 +229,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(greenPath + "/response-dose_calibration_plot_green.png", format='png')
+    plt.savefig(root.greenPath + "/response-dose_calibration_plot_green.png", format='png')
     plt.show()
 
     #BLUE CURVES
@@ -234,7 +243,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(bluePath + "/dose-response_calibration_plot_blue.png", format='png')
+    plt.savefig(root.bluePath + "/dose-response_calibration_plot_blue.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -247,7 +256,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(bluePath + "/response-dose_calibration_plot_blue.png", format='png')
+    plt.savefig(root.bluePath + "/response-dose_calibration_plot_blue.png", format='png')
     plt.show()
     
     fitResults = fitResultsSingleChannel(poptRedInverse, poptGreenInverse, poptBlueInverse)
@@ -275,7 +284,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.xlabel("PV")
         plt.ylabel("DOSE (Gy)")
         plt.legend(loc='upper right')
-        plt.savefig(tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
+        plt.savefig(root.tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
         plt.show()
         
         xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
@@ -298,12 +307,13 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.xlabel("DOSE (GY)")
         plt.ylabel("PV")
         plt.legend(loc='upper right')
-        plt.savefig(tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
+        plt.savefig(root.tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
         plt.show()
     
     return fitResults, x_max_lsmodel, y_calibration_fit
 
-def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults):
+def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, 
+                           recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, root):
     x_calibration_fit = np.linspace(0, x_max_lsmodel)
     y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit, a_red, b_red, fitResults)
     y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit,a_green, b_green, fitResults)
@@ -321,7 +331,7 @@ def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recali
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
+    plt.savefig(root.tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
     plt.show()
 
 def calibration_factors_calculator(zeroResponse, maxdoseResponse, fitResults):
@@ -368,7 +378,7 @@ def calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
     half_maximum_y = np.round((avg + dose_background_mean_y)/2,3)
     return dose_background_mean_x, dose_background_mean_y, maxd, avg, mind, std, half_maximum_x, half_maximum_y
 
-def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
+def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, root):
     shape = np.shape(dose)
     x = np.arange(shape[1])*dpiResolution
     y = np.arange(shape[0])*dpiResolution
@@ -377,7 +387,7 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
     
     from PIL import Image
     doseImage = Image.fromarray(dose)
-    doseImage.save(outputPath + stringoutput+ "_treatment_" +str(i+1) + "_raw." + doseRawImageOutputFormat)
+    doseImage.save(root.outputPath + stringoutput+ "_treatment_" +str(i+1) + "_raw." + doseRawImageOutputFormat)
         
     
     plt.figure()
@@ -388,8 +398,8 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i):
     plt.ylabel("y (mm)")
     plt.axis("scaled")
     plt.grid(True)
-    plt.savefig(outputPath + stringoutput + "_treatment_" + str(i+1) + "_figure.png", format='png')
-    print("Dose image saved as: \n" + outputPath + stringoutput+ "_treatment_" + str(i+1) + "_raw." + doseRawImageOutputFormat + " \n" + outputPath + stringoutput+str(i) + "_figure.png \n")
+    plt.savefig(root.outputPath + stringoutput + "_treatment_" + str(i+1) + "_figure.png", format='png')
+    print("Dose image saved as: \n" + root.outputPath + stringoutput+ "_treatment_" + str(i+1) + "_raw." + doseRawImageOutputFormat + " \n" + root.outputPath + stringoutput+str(i) + "_figure.png \n")
     plt.show()
 
 #TODO mettere a posto!!!

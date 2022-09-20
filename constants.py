@@ -1,26 +1,9 @@
 import glob as gb
 import numpy as np
+import sys
 
 #variabili d'ambiente
-path= '/home/pcdti1/Scrivania/chromo/CHROMO/' #"C:/Users/Imalytics/Desktop/chromo/" # 
-dataPath = path + 'data/'
-denoiserFolder = path + 'denoiser/'
-denoiserPath = denoiserFolder + 'denoise.py'
-outputPath = dataPath + 'OUTPUT/'
-nonFilteredCalibrationPath = dataPath + "CALIBRATION/"
-calibrationPath = outputPath + "_CALIBRATION_FILTERED/"
-nonFilteredTreatmentPath = dataPath + "TREATMENT/"
-treatmentPath = outputPath + "_TREATMENT_FILTERED/"
-redPath = outputPath + "RED/"
-greenPath = outputPath + "GREEN/"
-bluePath = outputPath + "BLUE/"
-tchPath = outputPath + "3CH/"
-
-unexposed_calibration_list = gb.glob(calibrationPath + "unexposed_calibration*")
-treatment_list = gb.glob(treatmentPath + "treatment*")
-unexposed_treatment_list = gb.glob(treatmentPath + "unexposed_treatment*")
-maxdose_treatment_list = gb.glob(treatmentPath + "maxdose_treatment*")
-calibration_list = gb.glob(nonFilteredCalibrationPath+"calibration*")  
+# path= '/home/pcdti1/Scrivania/chromo/CHROMO/' #"C:/Users/Imalytics/Desktop/chromo/" # 
 
 medianFilter = True
 medianKernel = 3

@@ -20,71 +20,75 @@ sys.path.append(".")
 from constants import *
 from functions import *
 from doseClass import *
+from rootClass import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
 
-cleanOutputDirectory()
-createOutputDirectories()
 warnings.filterwarnings("ignore")
+
+path = selectDirectory() 
+root = rootClass(path)
+cleanOutputDirectory(root)
+createOutputDirectories(root)
 
 if medianFilter:
     print('Starting denoising of calibration images with median filter...')
-    denoiserArg1 = '-d ' + nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
-    os.system(denoiserPath + " " + denoiserArg1)
-    for file in os.listdir(denoiserFolder):
+    denoiserArg1 = '-d ' + root.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
+    os.system(root.denoiserPath + " " + denoiserArg1)
+    for file in os.listdir(root.denoiserFolder):
         if(file.endswith(".tif")):
-            move(file,calibrationPath)
-    for file1 in os.listdir(path):
+            move(file,root.calibrationPath)
+    for file1 in os.listdir(root.path):
         if(file1.endswith(".tif")):
-            move(file1,calibrationPath)
+            move(file1,root.calibrationPath)
     
     print('Starting denoising of treatment images with median filter...')     
-    denoiserArg2 = '-d ' + nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
-    os.system(denoiserPath + " " + denoiserArg2)
-    for file in os.listdir(denoiserFolder):
+    denoiserArg2 = '-d ' + root.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
+    os.system(root.denoiserPath + " " + denoiserArg2)
+    for file in os.listdir(root.denoiserFolder):
         if(file.endswith(".tif")):
-            move(file,treatmentPath)
-    for file1 in os.listdir(path):
+            move(file,root.treatmentPath)
+    for file1 in os.listdir(root.path):
         if(file1.endswith(".tif")):
-            move(file1,treatmentPath)
+            move(file1,root.treatmentPath)
 else:
-    for fileNonFilteredCalibration in os.listdir(nonFilteredCalibrationPath):
-        copyfile(fileNonFilteredCalibration, calibrationPath)
-    for fileNonFilteredTreatment in os.listdir(nonFilteredTreatmentPath):
-            copyfile(fileNonFilteredTreatment, treatmentPath)
+    for fileNonFilteredCalibration in os.listdir(root.nonFilteredCalibrationPath):
+        copyfile(fileNonFilteredCalibration, root.calibrationPath)
+    for fileNonFilteredTreatment in os.listdir(root.nonFilteredTreatmentPath):
+            copyfile(fileNonFilteredTreatment, root.treatmentPath)
 
 if wienerFilter:
     print('Starting denoising of calibration images with wiener filter...')
-    denoiserArg3 = '-d ' + calibrationPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(denoiserPath + " " + denoiserArg3)
-    for file in os.listdir(denoiserFolder):
+    denoiserArg3 = '-d ' + root.calibrationPath + ' -f wiener -k ' + str(wienerKernel)
+    os.system(root.denoiserPath + " " + denoiserArg3)
+    for file in os.listdir(root.denoiserFolder):
         if(file.endswith(".tif")):
-            dest0 = os.path.join(calibrationPath,file)
+            dest0 = os.path.join(root.calibrationPath,file)
             move(file, dest0)
-    for file1 in os.listdir(path):
+    for file1 in os.listdir(root.path):
         if(file1.endswith(".tif")):
-            dest1 = os.path.join(calibrationPath,file1)
+            dest1 = os.path.join(root.calibrationPath,file1)
             move(file1, dest1)
 
     print('Starting denoising of treatment images with wiener filter...')     
-    denoiserArg4 = '-d ' + treatmentPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(denoiserPath + " " + denoiserArg4)
-    for file in os.listdir(denoiserFolder):
+    denoiserArg4 = '-d ' + root.treatmentPath + ' -f wiener -k ' + str(wienerKernel)
+    os.system(root.denoiserPath + " " + denoiserArg4)
+    for file in os.listdir(root.denoiserFolder):
         if(file.endswith(".tif")):
-            dest2 = os.path.join(treatmentPath, file)
+            dest2 = os.path.join(root.treatmentPath, file)
             move(file, dest2)
-    for file1 in os.listdir(path):
+    for file1 in os.listdir(root.path):
         if(file1.endswith(".tif")):
-            dest3 = os.path.join(treatmentPath,file1)
+            dest3 = os.path.join(root.treatmentPath,file1)
             move(file1, dest3)
             
-for unexposed_filepath in unexposed_calibration_list:
+for unexposed_filepath in root.unexposed_calibration_list:
     try:
         calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999))
     except:
         print('WARNING: No unexposed calibration film found')
             
-for calibration_filepath in calibration_list:
+for calibration_filepath in root.calibration_list:
     reg_search = re.search('.*calibration_(.*)Gy_.*', calibration_filepath)
     calibrationObjects.append(calibrationClass(cv2.imread(calibration_filepath), redChannel, greenChannel, blueChannel, reg_search.group(1), 999))
 
@@ -96,9 +100,9 @@ calibration_blue = [x.calibrationBlue for x in calibrationObjects]
       
 if singleChannelDosimetry:
     
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue)
+    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
 
-    for i, scan_filepath in enumerate(treatment_list):  
+    for i, scan_filepath in enumerate(root.treatment_list):  
            
         print("TREATMENT NUMBER " , i+1, '\n')
         print(" Treatment file analyzed = %s" % (scan_filepath), '\n')
@@ -121,12 +125,12 @@ if singleChannelDosimetry:
     for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr)):
         
         print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (treatment_list[enum]), '\n')
+        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
         print('DOSES AND PROFILES: \n')
     
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum)
+        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
+        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
+        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
         plt.show()
         
         if plotProfilesResults:
@@ -137,13 +141,13 @@ if singleChannelDosimetry:
     
 elif multiChannelDosimetry:
       
-    for i, (unexposed_treatment_filepath, maxdose_treatment_filepath) in enumerate(zip(unexposed_treatment_list, maxdose_treatment_list)):
+    for i, (unexposed_treatment_filepath, maxdose_treatment_filepath) in enumerate(zip(root.unexposed_treatment_list, root.maxdose_treatment_list)):
         unexposedTreatmentObjects.append(calibrationClass(cv2.imread(unexposed_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))
         maxDoseTreatmentObjects.append(calibrationClass(cv2.imread(maxdose_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))  
              
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue)
+    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
     
-    for i, scan_filepath in enumerate(treatment_list):  
+    for i, scan_filepath in enumerate(root.treatment_list):  
            
         a_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[0]  
         b_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[1]  
@@ -158,7 +162,9 @@ elif multiChannelDosimetry:
         image = cv2.imread(scan_filepath)
         netImage = image
         
-        plotRecalibratedImages(x_max_lsmodel, unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, i, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults)
+        plotRecalibratedImages(x_max_lsmodel, unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], recalibrated_multichannel_response_curve_red, 
+                               recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, i, 
+                               a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, root)
           
         dose_red =  inverse_recalibrated_multichannel_response_curve_red(netImage[:,:,redChannel], a_red, b_red, fitResults).clip(min=0)
         min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred = dose_calculations(dose_red, 'r', 0, 0)
@@ -180,17 +186,19 @@ elif multiChannelDosimetry:
     for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm, threechDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr, trheechDosObjArr )):
         
         print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (treatment_list[enum]), '\n')
+        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
         print('DOSES AND PROFILES: \n')
     
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum)
-        plot_dose((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum)
+        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
+        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
+        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
+        plot_dose((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, 
+                  blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum, root)
         plt.show()
         
         if plotProfilesResults:
             plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:')
             plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
             plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
-            plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
+            plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', 
+                             threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
