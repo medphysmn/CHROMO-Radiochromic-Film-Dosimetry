@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import glob as gb
 
-class rootClass:
+class rootFolderClass:
     def __init__(self, path):
         self.path = path
         self.dataPath =path + 'data/'
@@ -22,5 +22,7 @@ class rootClass:
         self.treatment_list = gb.glob(self.treatmentPath + "treatment*")
         self.unexposed_treatment_list = gb.glob(self.treatmentPath + "unexposed_treatment*")
         self.maxdose_treatment_list = gb.glob(self.treatmentPath + "maxdose_treatment*")
-        self.calibration_list = gb.glob(self.nonFilteredCalibrationPath+"calibration*")  
+        self.calibration_list = gb.glob(self.calibrationPath+"calibration*")  
+        self.nonFilteredTreatment_list = gb.glob(self.nonFilteredTreatmentPath+"treatment*")  
+        self.nonFilteredCalibration_list = gb.glob(self.nonFilteredCalibrationPath+"calibration*")  
 

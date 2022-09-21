@@ -5,9 +5,7 @@ import sys
 #variabili d'ambiente
 # path= '/home/pcdti1/Scrivania/chromo/CHROMO/' #"C:/Users/Imalytics/Desktop/chromo/" # 
 
-medianFilter = True
 medianKernel = 3
-wienerFilter = False
 wienerKernel = 3
 
 singleChannelDosimetry = False

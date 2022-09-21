@@ -2,8 +2,7 @@
 # coding: utf-8
 
 #TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
-#TODO ORA IL CALCOLO DELLA DOSE E CON METODO RAZIONALE MULTICANALE POI RICALIBRATO MA SEMPRE RAZIONALE
-#BISOGNEREBBE METTERE LA POSSIBILITA DI NON UTILIZZARE IL METODO DELLA RICALIBRAZIONE MA ANCHE SEMPLICE DOSIMETRIA MONOCANALE CON DIVERSE FUNZIONI ES RAZIONALE ESPONENZIALE ECC..
+#TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
 import scipy
 import numpy as np
 import re
@@ -15,80 +14,68 @@ from scipy.optimize import *
 from scipy.interpolate import *
 from shutil import move, copyfile
 import os
+import tkinter
+import tkinter.ttk as ttk
+from tkinter import filedialog
+from sys import exit
 
 sys.path.append(".")
 from constants import *
 from functions import *
 from doseClass import *
-from rootClass import *
+from rootFolderClass import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
 
 warnings.filterwarnings("ignore")
 
 path = selectDirectory() 
-root = rootClass(path)
-cleanOutputDirectory(root)
-createOutputDirectories(root)
+rootFolder = rootFolderClass(path)
+         
+denoiser = tk.Toplevel()
+denoiser.title('CHROMO: Radiochromic Film Dosimetry')
+denoiser.geometry("1000x700")
+denoiser.config(background = "white")
+denoiser.resizable(True, True)
 
-if medianFilter:
-    print('Starting denoising of calibration images with median filter...')
-    denoiserArg1 = '-d ' + root.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
-    os.system(root.denoiserPath + " " + denoiserArg1)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,root.calibrationPath)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            move(file1,root.calibrationPath)
-    
-    print('Starting denoising of treatment images with median filter...')     
-    denoiserArg2 = '-d ' + root.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
-    os.system(root.denoiserPath + " " + denoiserArg2)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,root.treatmentPath)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            move(file1,root.treatmentPath)
-else:
-    for fileNonFilteredCalibration in os.listdir(root.nonFilteredCalibrationPath):
-        copyfile(fileNonFilteredCalibration, root.calibrationPath)
-    for fileNonFilteredTreatment in os.listdir(root.nonFilteredTreatmentPath):
-            copyfile(fileNonFilteredTreatment, root.treatmentPath)
+imageframe = tk.Frame(denoiser, width=500, height=500)
+try:
+    imageResized = pilimage.open(rootFolder.nonFilteredTreatment_list[0]).resize((500,500))
+except:
+    raise Exception("Treatment not Found")
+#cambia con il bottone dei filtri l'immagine
+imageframe.grid(column = 2, row = 2, padx=10, pady=10,rowspan=5)
+img = itk.PhotoImage(imageResized)
+labelImage = tk.Label(imageframe, image = img)
+labelImage.grid()
 
-if wienerFilter:
-    print('Starting denoising of calibration images with wiener filter...')
-    denoiserArg3 = '-d ' + root.calibrationPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(root.denoiserPath + " " + denoiserArg3)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest0 = os.path.join(root.calibrationPath,file)
-            move(file, dest0)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            dest1 = os.path.join(root.calibrationPath,file1)
-            move(file1, dest1)
+#AGGIUNGI LE TABS DENOISER ECC
+label_denoising = tk.Label(denoiser, text="CHOOSE ONE DENOISING OPTION", bg="yellow", font=("Arial", 20))
+label_sample_image = tk.Label(denoiser, text="TREATMENT IMAGE PREVIEW", bg="yellow", font=("Arial", 20))
+button_median = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH MEDIAN FILTER", 
+                       command = lambda: median(rootFolder, label_denoising,denoiser, labelImage))
+button_wiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER FILTER", 
+                       command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage))
+button_medianandwiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER ANDE MEDIAN FILTER", 
+                                command = lambda: medianAndWiener(rootFolder, label_denoising,denoiser, labelImage))
+button_no_denoising = tk.Button(denoiser, text = "DON'T USE ANY FILTER ON THE ORIGINAL IMAGES ", 
+                             command = lambda: noDenoising(rootFolder, label_denoising,denoiser, labelImage))
 
-    print('Starting denoising of treatment images with wiener filter...')     
-    denoiserArg4 = '-d ' + root.treatmentPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(root.denoiserPath + " " + denoiserArg4)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest2 = os.path.join(root.treatmentPath, file)
-            move(file, dest2)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            dest3 = os.path.join(root.treatmentPath,file1)
-            move(file1, dest3)
+label_denoising.grid(column = 1, row = 1, padx=10, pady=10)
+label_sample_image.grid(column = 2, row = 1, padx=10, pady=10)
+button_median.grid(column = 1, row = 2, padx=10, pady=10)
+button_wiener.grid(column = 1, row = 3, padx=10, pady=10)
+button_medianandwiener.grid(column = 1, row = 4, padx=10, pady=10)
+button_no_denoising.grid(column = 1, row = 5, padx=10, pady=10)
+denoiser.mainloop()
             
-for unexposed_filepath in root.unexposed_calibration_list:
+for unexposed_filepath in rootFolder.unexposed_calibration_list:
     try:
         calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999))
     except:
         print('WARNING: No unexposed calibration film found')
             
-for calibration_filepath in root.calibration_list:
+for calibration_filepath in rootFolder.calibration_list:
     reg_search = re.search('.*calibration_(.*)Gy_.*', calibration_filepath)
     calibrationObjects.append(calibrationClass(cv2.imread(calibration_filepath), redChannel, greenChannel, blueChannel, reg_search.group(1), 999))
 
@@ -100,9 +87,9 @@ calibration_blue = [x.calibrationBlue for x in calibrationObjects]
       
 if singleChannelDosimetry:
     
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
+    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, rootFolder)
 
-    for i, scan_filepath in enumerate(root.treatment_list):  
+    for i, scan_filepath in enumerate(rootFolder.treatment_list):  
            
         print("TREATMENT NUMBER " , i+1, '\n')
         print(" Treatment file analyzed = %s" % (scan_filepath), '\n')
@@ -125,12 +112,12 @@ if singleChannelDosimetry:
     for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr)):
         
         print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
+        print(" filepath = %s" % (rootFolder.treatment_list[enum]), '\n')
         print('DOSES AND PROFILES: \n')
     
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
+        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, rootFolder)
+        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, rootFolder)
+        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, rootFolder)
         plt.show()
         
         if plotProfilesResults:
@@ -141,14 +128,14 @@ if singleChannelDosimetry:
     
 elif multiChannelDosimetry:
       
-    for i, (unexposed_treatment_filepath, maxdose_treatment_filepath) in enumerate(zip(root.unexposed_treatment_list, root.maxdose_treatment_list)):
+    for i, (unexposed_treatment_filepath, maxdose_treatment_filepath) in enumerate(zip(rootFolder.unexposed_treatment_list, rootFolder.maxdose_treatment_list)):
         unexposedTreatmentObjects.append(calibrationClass(cv2.imread(unexposed_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))
         maxDoseTreatmentObjects.append(calibrationClass(cv2.imread(maxdose_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))  
              
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
+    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, rootFolder)
     
-    for i, scan_filepath in enumerate(root.treatment_list):  
-           
+    for i, scan_filepath in enumerate(rootFolder.treatment_list):  
+        
         a_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[0]  
         b_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[1]  
         a_green = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationGreen, maxDoseTreatmentObjects[i].calibrationGreen, fitResults)[0]  
@@ -164,7 +151,7 @@ elif multiChannelDosimetry:
         
         plotRecalibratedImages(x_max_lsmodel, unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], recalibrated_multichannel_response_curve_red, 
                                recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, i, 
-                               a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, root)
+                               a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, rootFolder)
           
         dose_red =  inverse_recalibrated_multichannel_response_curve_red(netImage[:,:,redChannel], a_red, b_red, fitResults).clip(min=0)
         min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred = dose_calculations(dose_red, 'r', 0, 0)
@@ -186,14 +173,14 @@ elif multiChannelDosimetry:
     for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm, threechDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr, trheechDosObjArr )):
         
         print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
+        print(" filepath = %s" % (rootFolder.treatment_list[enum]), '\n')
         print('DOSES AND PROFILES: \n')
     
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
+        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, rootFolder)
+        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, rootFolder)
+        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, rootFolder)
         plot_dose((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, 
-                  blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum, root)
+                  blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum, rootFolder)
         plt.show()
         
         if plotProfilesResults:

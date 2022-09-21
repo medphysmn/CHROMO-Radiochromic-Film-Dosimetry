@@ -10,38 +10,124 @@ import scipy
 import math 
 import os
 import shutil
-from tkinter import Tk, filedialog
+from sys import exit
+from shutil import move, copyfile
+from PIL import ImageTk as itk
+from PIL import Image as pilimage
+import tkinter as tk
+import tkinter.ttk as ttk
+from tkinter import filedialog
+from PIL import ImageTk
+
 sys.path.append(".")
 from constants import *
 
 from fitResultsSingleChannel import *
 
-def cleanOutputDirectory(root):
+def cleanOutputDirectory(rootFolder):
     try:
-        shutil.rmtree(os.path.join(root.dataPath, 'OUTPUT'))
+        shutil.rmtree(os.path.join(rootFolder.dataPath, 'OUTPUT'))
     except:
         ...
 
-def createOutputDirectories(root):
+def createOutputDirectories(rootFolder):
     try:
-        os.mkdir(os.path.join(root.dataPath, 'OUTPUT'))
-        os.mkdir(os.path.join(root.outputPath, '_CALIBRATION_FILTERED'))
-        os.mkdir(os.path.join(root.outputPath, '_TREATMENT_FILTERED'))
-        os.mkdir(os.path.join(root.outputPath, '3CH'))
-        os.mkdir(os.path.join(root.outputPath, 'BLUE'))
-        os.mkdir(os.path.join(root.outputPath, 'GREEN'))
-        os.mkdir(os.path.join(root.outputPath, 'RED'))
+        os.mkdir(os.path.join(rootFolder.dataPath, 'OUTPUT'))
+        os.mkdir(os.path.join(rootFolder.outputPath, '3CH'))
+        os.mkdir(os.path.join(rootFolder.outputPath, 'BLUE'))
+        os.mkdir(os.path.join(rootFolder.outputPath, 'GREEN'))
+        os.mkdir(os.path.join(rootFolder.outputPath, 'RED'))
+        os.mkdir(os.path.join(rootFolder.outputPath, '_CALIBRATION_FILTERED'))
+        os.mkdir(os.path.join(rootFolder.outputPath, '_TREATMENT_FILTERED'))
     except:
         ...
- 
+        
 def selectDirectory():
-    root = Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
+    global path
+    browse = tk.Tk()
+    browse.withdraw()
+    browse.attributes('-topmost', True)
     path = filedialog.askdirectory(title='select root folder') + '/'
-    
     return path
+        
+def insertFilteredImage(r, rootFolder, labelImage):
+    filtered = ImageTk.PhotoImage(pilimage.open(rootFolder.treatment_list[0]).resize((500,500)))
+    labelImage.configure(image=filtered)
+    labelImage.photo = filtered
+    print("updated image")    
+
+def median(rootFolder, label, r, labelImage):
+    cleanOutputDirectory(rootFolder)
+    createOutputDirectories(rootFolder)
+    print('Starting denoising of calibration images with median filter...')
+    denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
+    os.system(rootFolder.denoiserPath + " " + denoiserArg1)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            move(file,rootFolder.calibrationPath)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            move(file1,rootFolder.calibrationPath)
+    
+    print('Starting denoising of treatment images with median filter...')     
+    denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
+    os.system(rootFolder.denoiserPath + " " + denoiserArg2)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            move(file,rootFolder.treatmentPath)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            move(file1,rootFolder.treatmentPath)
             
+    label.config(text="MEDIAN FILTER APPLIED")
+    insertFilteredImage(r, rootFolder, labelImage)
+
+def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, labelImage):
+    print('Starting denoising of calibration images with wiener filter...')
+    denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel)
+    os.system(rootFolder.denoiserPath + " " + denoiserArg3)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            dest0 = os.path.join(rootFolder.calibrationPath,file)
+            move(file, dest0)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            dest1 = os.path.join(rootFolder.calibrationPath,file1)
+            move(file1, dest1)
+
+    print('Starting denoising of treatment images with wiener filter...')     
+    denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel)
+    os.system(rootFolder.denoiserPath + " " + denoiserArg4)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            dest2 = os.path.join(rootFolder.treatmentPath, file)
+            move(file, dest2)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            dest3 = os.path.join(rootFolder.treatmentPath,file1)
+            move(file1, dest3)
+    
+    label.config(text="WIENER FILTER APPLIED")
+    insertFilteredImage(r, rootFolder, labelImage)
+
+def medianAndWiener(rootFolder, label, r, labelImage):
+    cleanOutputDirectory(rootFolder)
+    createOutputDirectories(rootFolder)
+    median(rootFolder, label, r, labelImage)
+    wiener(rootFolder, rootFolder.calibrationPath, rootFolder.treatmentPath, label, r, labelImage)
+    
+    label.config(text="WIENER AND MEDIAN FILTERS APPLIED")
+    insertFilteredImage(r, rootFolder, labelImage)
+
+def noDenoising(rootFolder, label, r, labelImage):
+    cleanOutputDirectory(rootFolder)
+    shutil.copytree(rootFolder.nonFilteredCalibrationPath,rootFolder.calibrationPath)
+    shutil.copytree(rootFolder.nonFilteredTreatmentPath, rootFolder.treatmentPath)
+    createOutputDirectories(rootFolder)
+    label.config(text="NO FITLERS APPLIED")
+    insertFilteredImage(r, rootFolder, labelImage)
+
+    
 def a_recalibration(yp1, yp2, y1, y2):
     return (y2*yp1-y1*yp2)/(y2-y1)
 
@@ -169,7 +255,7 @@ def projectionSingle(image):
     xprofile = image[int(sizex/2) , :]
     return(xprofile, yprofile)
 
-def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue, root):
+def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue, rootFolder):
     
     d = np.linspace(np.min(calibration_dose), np.max(calibration_dose))
     r = np.linspace(np.min(calibration_red), np.max(calibration_red))
@@ -189,7 +275,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(root.redPath + "/dose-response_calibration_plot_red.png", format='png')
+    plt.savefig(rootFolder.redPath + "/dose-response_calibration_plot_red.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -202,7 +288,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(root.redPath + "/response-dose_calibration_plot_red.png", format='png')
+    plt.savefig(rootFolder.redPath + "/response-dose_calibration_plot_red.png", format='png')
     plt.show()
 
     #GREEN CURVES
@@ -216,7 +302,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(root.greenPath + "/dose-response_calibration_plot_green.png", format='png')
+    plt.savefig(rootFolder.greenPath + "/dose-response_calibration_plot_green.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -229,7 +315,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(root.greenPath + "/response-dose_calibration_plot_green.png", format='png')
+    plt.savefig(rootFolder.greenPath + "/response-dose_calibration_plot_green.png", format='png')
     plt.show()
 
     #BLUE CURVES
@@ -243,7 +329,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(root.bluePath + "/dose-response_calibration_plot_blue.png", format='png')
+    plt.savefig(rootFolder.bluePath + "/dose-response_calibration_plot_blue.png", format='png')
     plt.show()
 
     if fitFunction == 'rational':
@@ -256,7 +342,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.xlabel("PV")
     plt.ylabel("DOSE (Gy)")
     plt.legend(loc='upper right')
-    plt.savefig(root.bluePath + "/response-dose_calibration_plot_blue.png", format='png')
+    plt.savefig(rootFolder.bluePath + "/response-dose_calibration_plot_blue.png", format='png')
     plt.show()
     
     fitResults = fitResultsSingleChannel(poptRedInverse, poptGreenInverse, poptBlueInverse)
@@ -284,7 +370,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.xlabel("PV")
         plt.ylabel("DOSE (Gy)")
         plt.legend(loc='upper right')
-        plt.savefig(root.tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
+        plt.savefig(rootFolder.tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
         plt.show()
         
         xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
@@ -307,13 +393,13 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.xlabel("DOSE (GY)")
         plt.ylabel("PV")
         plt.legend(loc='upper right')
-        plt.savefig(root.tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
+        plt.savefig(rootFolder.tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
         plt.show()
     
     return fitResults, x_max_lsmodel, y_calibration_fit
 
 def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, 
-                           recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, root):
+                           recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, rootFolder):
     x_calibration_fit = np.linspace(0, x_max_lsmodel)
     y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit, a_red, b_red, fitResults)
     y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit,a_green, b_green, fitResults)
@@ -331,7 +417,7 @@ def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recali
     plt.xlabel("DOSE (Gy)")
     plt.ylabel("PV")
     plt.legend(loc='upper right')
-    plt.savefig(root.tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
+    plt.savefig(rootFolder.tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
     plt.show()
 
 def calibration_factors_calculator(zeroResponse, maxdoseResponse, fitResults):
@@ -378,7 +464,7 @@ def calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
     half_maximum_y = np.round((avg + dose_background_mean_y)/2,3)
     return dose_background_mean_x, dose_background_mean_y, maxd, avg, mind, std, half_maximum_x, half_maximum_y
 
-def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, root):
+def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, rootFolder):
     shape = np.shape(dose)
     x = np.arange(shape[1])*dpiResolution
     y = np.arange(shape[0])*dpiResolution
@@ -387,7 +473,7 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, 
     
     from PIL import Image
     doseImage = Image.fromarray(dose)
-    doseImage.save(root.outputPath + stringoutput+ "_treatment_" +str(i+1) + "_raw." + doseRawImageOutputFormat)
+    doseImage.save(rootFolder.outputPath + stringoutput+ "_treatment_" +str(i+1) + "_raw." + doseRawImageOutputFormat)
         
     
     plt.figure()
@@ -398,8 +484,8 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, 
     plt.ylabel("y (mm)")
     plt.axis("scaled")
     plt.grid(True)
-    plt.savefig(root.outputPath + stringoutput + "_treatment_" + str(i+1) + "_figure.png", format='png')
-    print("Dose image saved as: \n" + root.outputPath + stringoutput+ "_treatment_" + str(i+1) + "_raw." + doseRawImageOutputFormat + " \n" + root.outputPath + stringoutput+str(i) + "_figure.png \n")
+    plt.savefig(rootFolder.outputPath + stringoutput + "_treatment_" + str(i+1) + "_figure.png", format='png')
+    print("Dose image saved as: \n" + rootFolder.outputPath + stringoutput+ "_treatment_" + str(i+1) + "_raw." + doseRawImageOutputFormat + " \n" + rootFolder.outputPath + stringoutput+str(i) + "_figure.png \n")
     plt.show()
 
 #TODO mettere a posto!!!
