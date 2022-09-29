@@ -9,9 +9,6 @@ widthTk = 1000
 heightTk = 700
 imagedim = 500
 
-medianKernel = 3
-wienerKernel = 3
-
 singleChannelDosimetry = False
 if singleChannelDosimetry:
     multiChannelDosimetry = False

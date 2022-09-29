@@ -67,7 +67,10 @@ def median(rootFolder, label, r, labelImage, medianKernel):
     createOutputDirectories(rootFolder)
     createOutputDirectoriesOnlyChannels(rootFolder)
     print('Starting denoising of calibration images with median filter...')
-    denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel.get())
+    try:
+        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel.get())
+    except:
+        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + 3
     os.system(rootFolder.denoiserPath + " " + denoiserArg1)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -76,8 +79,11 @@ def median(rootFolder, label, r, labelImage, medianKernel):
         if(file1.endswith(".tif")):
             move(file1,rootFolder.calibrationPath)
     
-    print('Starting denoising of treatment images with median filter...')     
-    denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel.get())
+    print('Starting denoising of treatment images with median filter...')   
+    try:
+        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel.get())
+    except:
+        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + 3
     os.system(rootFolder.denoiserPath + " " + denoiserArg2)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -95,7 +101,10 @@ def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, lab
         createOutputDirectories(rootFolder)
         createOutputDirectoriesOnlyChannels(rootFolder)   
     print('Starting denoising of calibration images with wiener filter...')
-    denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel.get())
+    try:
+        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel.get())
+    except:
+        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + 3
     os.system(rootFolder.denoiserPath + " " + denoiserArg3)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -107,7 +116,10 @@ def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, lab
             move(file1, dest1)
 
     print('Starting denoising of treatment images with wiener filter...')     
-    denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel.get())
+    try:
+        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel.get())
+    except:
+        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + 3
     os.system(rootFolder.denoiserPath + " " + denoiserArg4)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
