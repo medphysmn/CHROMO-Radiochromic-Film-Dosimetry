@@ -52,21 +52,21 @@ img = itk.PhotoImage(imageResized)
 labelImage = tk.Label(imageframe, image = img)
 labelImage.grid(column = 2, row = 3)
 
-label_denoising = tk.Label(denoiser, text="CHOOSE ONE \n DENOISING OPTION", bg="yellow", font=("Arial", 20))
-tk.Label(denoiser, text="Enter Median Kernel, default value is 3:", font=("Arial")).grid(column = 1, row = 8)
-medianKernelTk=tk.Entry(denoiser, width=35)
-medianKernelTk.grid(column = 1, row = 9)
-tk.Label(denoiser, text="Enter Wiener Kernel, default value is 3:", font=("Arial")).grid(column = 1, row = 10)
-wienerKernelTk=tk.Entry(denoiser, width=35)
-wienerKernelTk.grid(column = 1, row = 11)
+label_denoising = tk.Label(denoiser, text="CHOOSE ONE DENOISING OPTION \n FOR CALIBRATION AND \n TREATMENT IMAGES:", fg="blue", font=("Arial", 15))
+tk.Label(denoiser, text="Enter Median Kernel (default value is 3):", font=("Arial")).grid(column = 1, row = 8)
+medianKernelTk=tk.Entry(denoiser, width=80)
+medianKernelTk.grid(column = 2, row = 8)
+tk.Label(denoiser, text="Enter Wiener Kernel (default value is 3):", font=("Arial")).grid(column = 1, row = 10)
+wienerKernelTk=tk.Entry(denoiser, width=80)
+wienerKernelTk.grid(column = 2, row = 10)
 
-button_median = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH MEDIAN FILTER", 
+button_median = tk.Button(denoiser, text = "DENOISE IMAGES WITH MEDIAN FILTER", #background="yellow",
                        command = lambda: median(rootFolder, label_denoising,denoiser, labelImage, medianKernelTk))
-button_wiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER FILTER", 
+button_wiener = tk.Button(denoiser, text = "DENOISE IMAGES WITH WIENER FILTER",  #background="yellow",
                        command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage, True, wienerKernelTk))
-button_medianandwiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER AND MEDIAN FILTER", 
+button_medianandwiener = tk.Button(denoiser, text = "DENOISE IMAGES WITH WIENER AND MEDIAN FILTER", #background="yellow",
                                 command = lambda: medianAndWiener(rootFolder, label_denoising, denoiser, labelImage,medianKernelTk ,wienerKernelTk))
-button_no_denoising = tk.Button(denoiser, text = "DON'T USE ANY FILTER ON THE ORIGINAL IMAGES ", 
+button_no_denoising = tk.Button(denoiser, text = "DON'T USE ANY FILTER ", #background="yellow", 
                              command = lambda: noDenoising(rootFolder, label_denoising, denoiser, labelImage))
 
 label_denoising.grid(column = 1, row = 3, padx=10, pady=10)
@@ -74,7 +74,7 @@ button_median.grid(column = 1, row = 4, padx=10, pady=10)
 button_wiener.grid(column = 1, row = 5, padx=10, pady=10)
 button_medianandwiener.grid(column = 1, row = 6, padx=10, pady=10)
 button_no_denoising.grid(column = 1, row = 7, padx=10, pady=10)
-denoiser.mainloop()
+chromoTk.mainloop()
 
 rootFolder = rootFolderClass(path)
 for unexposed_filepath in rootFolder.unexposed_calibration_list:    
