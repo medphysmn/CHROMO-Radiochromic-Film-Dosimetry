@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import glob as gb
+import shutil
+import os
 
 class rootFolderClass:
     def __init__(self, path):
@@ -25,4 +27,4 @@ class rootFolderClass:
         self.calibration_list = gb.glob(self.calibrationPath+"calibration*")  
         self.nonFilteredTreatment_list = gb.glob(self.nonFilteredTreatmentPath+"treatment*")  
         self.nonFilteredCalibration_list = gb.glob(self.nonFilteredCalibrationPath+"calibration*")  
-
+        

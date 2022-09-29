@@ -5,6 +5,10 @@ import sys
 #variabili d'ambiente
 # path= '/home/pcdti1/Scrivania/chromo/CHROMO/' #"C:/Users/Imalytics/Desktop/chromo/" # 
 
+widthTk = 1000
+heightTk = 700
+imagedim = 500
+
 medianKernel = 3
 wienerKernel = 3
 

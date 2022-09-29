@@ -2,7 +2,6 @@
 # coding: utf-8
 
 #TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
-#TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
 import scipy
 import numpy as np
 import re
@@ -29,47 +28,56 @@ from fitResultsSingleChannel import *
 
 warnings.filterwarnings("ignore")
 
+global path
 path = selectDirectory() 
 rootFolder = rootFolderClass(path)
-         
-denoiser = tk.Toplevel()
-denoiser.title('CHROMO: Radiochromic Film Dosimetry')
-denoiser.geometry("1000x700")
-denoiser.config(background = "white")
-denoiser.resizable(True, True)
 
-imageframe = tk.Frame(denoiser, width=500, height=500)
-try:
-    imageResized = pilimage.open(rootFolder.nonFilteredTreatment_list[0]).resize((500,500))
-except:
-    raise Exception("Treatment not Found")
-#cambia con il bottone dei filtri l'immagine
-imageframe.grid(column = 2, row = 2, padx=10, pady=10,rowspan=5)
+chromoTk = tk.Toplevel()
+chromoTk.title('CHROMO: Radiochromic Film Dosimetry')
+chromoTk.geometry(str(widthTk)+"x"+str(heightTk))
+chromoTk.config(background = "white")
+chromoTk.resizable(True, True)
+
+tabsystem = ttk.Notebook(chromoTk)
+denoiser = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+calibration = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+tabsystem.add(denoiser, text='Denoiser')
+tabsystem.add(calibration, text='Calibration')
+tabsystem.grid(column = 1, row = 0)
+
+imageframe = tk.Frame(denoiser, width=imagedim, height=imagedim)
+imageResized = pilimage.open("blank.jpg").resize((imagedim,imagedim))
+imageframe.grid(column = 2, row = 3, padx=10, pady=10,rowspan=5)
 img = itk.PhotoImage(imageResized)
 labelImage = tk.Label(imageframe, image = img)
-labelImage.grid()
+labelImage.grid(column = 2, row = 3)
 
-#AGGIUNGI LE TABS DENOISER ECC
-label_denoising = tk.Label(denoiser, text="CHOOSE ONE DENOISING OPTION", bg="yellow", font=("Arial", 20))
-label_sample_image = tk.Label(denoiser, text="TREATMENT IMAGE PREVIEW", bg="yellow", font=("Arial", 20))
+label_denoising = tk.Label(denoiser, text="CHOOSE ONE \n DENOISING OPTION", bg="yellow", font=("Arial", 20))
+tk.Label(denoiser, text="Enter Median Kernel, default value is 3:", font=("Arial")).grid(column = 1, row = 8)
+medianKernelTk=tk.Entry(denoiser, width=35)
+medianKernelTk.grid(column = 1, row = 9)
+tk.Label(denoiser, text="Enter Wiener Kernel, default value is 3:", font=("Arial")).grid(column = 1, row = 10)
+wienerKernelTk=tk.Entry(denoiser, width=35)
+wienerKernelTk.grid(column = 1, row = 11)
+
 button_median = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH MEDIAN FILTER", 
-                       command = lambda: median(rootFolder, label_denoising,denoiser, labelImage))
+                       command = lambda: median(rootFolder, label_denoising,denoiser, labelImage, medianKernelTk))
 button_wiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER FILTER", 
-                       command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage))
-button_medianandwiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER ANDE MEDIAN FILTER", 
-                                command = lambda: medianAndWiener(rootFolder, label_denoising,denoiser, labelImage))
+                       command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage, True, wienerKernelTk))
+button_medianandwiener = tk.Button(denoiser, text = "DENOISE ORIGINAL IMAGES WITH WIENER AND MEDIAN FILTER", 
+                                command = lambda: medianAndWiener(rootFolder, label_denoising, denoiser, labelImage,medianKernelTk ,wienerKernelTk))
 button_no_denoising = tk.Button(denoiser, text = "DON'T USE ANY FILTER ON THE ORIGINAL IMAGES ", 
-                             command = lambda: noDenoising(rootFolder, label_denoising,denoiser, labelImage))
+                             command = lambda: noDenoising(rootFolder, label_denoising, denoiser, labelImage))
 
-label_denoising.grid(column = 1, row = 1, padx=10, pady=10)
-label_sample_image.grid(column = 2, row = 1, padx=10, pady=10)
-button_median.grid(column = 1, row = 2, padx=10, pady=10)
-button_wiener.grid(column = 1, row = 3, padx=10, pady=10)
-button_medianandwiener.grid(column = 1, row = 4, padx=10, pady=10)
-button_no_denoising.grid(column = 1, row = 5, padx=10, pady=10)
+label_denoising.grid(column = 1, row = 3, padx=10, pady=10)
+button_median.grid(column = 1, row = 4, padx=10, pady=10)
+button_wiener.grid(column = 1, row = 5, padx=10, pady=10)
+button_medianandwiener.grid(column = 1, row = 6, padx=10, pady=10)
+button_no_denoising.grid(column = 1, row = 7, padx=10, pady=10)
 denoiser.mainloop()
-            
-for unexposed_filepath in rootFolder.unexposed_calibration_list:
+
+rootFolder = rootFolderClass(path)
+for unexposed_filepath in rootFolder.unexposed_calibration_list:    
     try:
         calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999))
     except:

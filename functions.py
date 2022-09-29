@@ -32,13 +32,19 @@ def cleanOutputDirectory(rootFolder):
 
 def createOutputDirectories(rootFolder):
     try:
-        os.mkdir(os.path.join(rootFolder.dataPath, 'OUTPUT'))
+        rootFolder = rootFolderClass(path)
+        os.mkdir(os.path.join(rootFolder.outputPath, '_CALIBRATION_FILTERED'))
+        os.mkdir(os.path.join(rootFolder.outputPath, '_TREATMENT_FILTERED'))
+    except:
+        ...
+        
+def createOutputDirectoriesOnlyChannels(rootFolder):
+    try:
+        rootFolder = rootFolderClass(path)
         os.mkdir(os.path.join(rootFolder.outputPath, '3CH'))
         os.mkdir(os.path.join(rootFolder.outputPath, 'BLUE'))
         os.mkdir(os.path.join(rootFolder.outputPath, 'GREEN'))
         os.mkdir(os.path.join(rootFolder.outputPath, 'RED'))
-        os.mkdir(os.path.join(rootFolder.outputPath, '_CALIBRATION_FILTERED'))
-        os.mkdir(os.path.join(rootFolder.outputPath, '_TREATMENT_FILTERED'))
     except:
         ...
         
@@ -50,17 +56,18 @@ def selectDirectory():
     path = filedialog.askdirectory(title='select root folder') + '/'
     return path
         
-def insertFilteredImage(r, rootFolder, labelImage):
-    filtered = ImageTk.PhotoImage(pilimage.open(rootFolder.treatment_list[0]).resize((500,500)))
+def insertFilteredImage(r, rootFolder, labelImage, image):
+    filtered = ImageTk.PhotoImage(pilimage.open(image).resize((500,500)))
     labelImage.configure(image=filtered)
     labelImage.photo = filtered
     print("updated image")    
 
-def median(rootFolder, label, r, labelImage):
+def median(rootFolder, label, r, labelImage, medianKernel):
     cleanOutputDirectory(rootFolder)
     createOutputDirectories(rootFolder)
+    createOutputDirectoriesOnlyChannels(rootFolder)
     print('Starting denoising of calibration images with median filter...')
-    denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
+    denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel.get())
     os.system(rootFolder.denoiserPath + " " + denoiserArg1)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -70,7 +77,7 @@ def median(rootFolder, label, r, labelImage):
             move(file1,rootFolder.calibrationPath)
     
     print('Starting denoising of treatment images with median filter...')     
-    denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
+    denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel.get())
     os.system(rootFolder.denoiserPath + " " + denoiserArg2)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -80,11 +87,15 @@ def median(rootFolder, label, r, labelImage):
             move(file1,rootFolder.treatmentPath)
             
     label.config(text="MEDIAN FILTER APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage)
+    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
 
-def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, labelImage):
+def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, labelImage, deleteFolders, wienerKernel):
+    if deleteFolders:
+        cleanOutputDirectory(rootFolder)
+        createOutputDirectories(rootFolder)
+        createOutputDirectoriesOnlyChannels(rootFolder)   
     print('Starting denoising of calibration images with wiener filter...')
-    denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel)
+    denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel.get())
     os.system(rootFolder.denoiserPath + " " + denoiserArg3)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -96,7 +107,7 @@ def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, lab
             move(file1, dest1)
 
     print('Starting denoising of treatment images with wiener filter...')     
-    denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel)
+    denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel.get())
     os.system(rootFolder.denoiserPath + " " + denoiserArg4)
     for file in os.listdir(rootFolder.denoiserFolder):
         if(file.endswith(".tif")):
@@ -108,24 +119,26 @@ def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, lab
             move(file1, dest3)
     
     label.config(text="WIENER FILTER APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage)
+    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
 
-def medianAndWiener(rootFolder, label, r, labelImage):
+def medianAndWiener(rootFolder, label, r, labelImage, medianKernel, wienerKernel):
     cleanOutputDirectory(rootFolder)
     createOutputDirectories(rootFolder)
-    median(rootFolder, label, r, labelImage)
-    wiener(rootFolder, rootFolder.calibrationPath, rootFolder.treatmentPath, label, r, labelImage)
+    createOutputDirectoriesOnlyChannels(rootFolder)
+    median(rootFolder, label, r, labelImage, medianKernel)
+    wiener(rootFolder, rootFolder.calibrationPath, rootFolder.treatmentPath, label, r, labelImage, False, wienerKernel)
     
     label.config(text="WIENER AND MEDIAN FILTERS APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage)
+    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
 
 def noDenoising(rootFolder, label, r, labelImage):
     cleanOutputDirectory(rootFolder)
     shutil.copytree(rootFolder.nonFilteredCalibrationPath,rootFolder.calibrationPath)
     shutil.copytree(rootFolder.nonFilteredTreatmentPath, rootFolder.treatmentPath)
     createOutputDirectories(rootFolder)
+    createOutputDirectoriesOnlyChannels(rootFolder)
     label.config(text="NO FITLERS APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage)
+    insertFilteredImage(r, rootFolder, labelImage, rootFolder.nonFilteredTreatment_list[0])
 
     
 def a_recalibration(yp1, yp2, y1, y2):
