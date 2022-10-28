@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import sys
-sys.path.append(".")
-from constants import *
 
 class calibrationClass:
     def __init__(self, calibrationImage, redChannel, greenChannel, blueChannel, calibration_dose, treatment_number, dimRoiCalibration):

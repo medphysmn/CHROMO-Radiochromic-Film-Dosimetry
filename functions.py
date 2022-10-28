@@ -20,157 +20,12 @@ from tkinter import filedialog
 from PIL import ImageTk
 import re
 
-from constants import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
 from rootFolderClass import *
 from doseClass import *
 
-def cleanOutputDirectory(rootFolder):
-    try:
-        shutil.rmtree(os.path.join(rootFolder.dataPath, 'OUTPUT'))
-    except:
-        ...
-
-def createOutputDirectories(rootFolder):
-    try:
-        rootFolder = rootFolderClass(path)
-        os.mkdir(os.path.join(rootFolder.outputPath, '_CALIBRATION_FILTERED'))
-        os.mkdir(os.path.join(rootFolder.outputPath, '_TREATMENT_FILTERED'))
-    except:
-        ...
-        
-def createOutputDirectoriesOnlyChannels(rootFolder):
-    rootFolder = rootFolderClass(path)
-    os.mkdir(os.path.join(rootFolder.outputPath, '3CH'))
-    os.mkdir(os.path.join(rootFolder.outputPath, 'BLUE'))
-    os.mkdir(os.path.join(rootFolder.outputPath, 'GREEN'))
-    os.mkdir(os.path.join(rootFolder.outputPath, 'RED'))
-        
-def selectDirectory():
-    global path
-    browse = tk.Tk()
-    browse.withdraw()
-    browse.attributes('-topmost', True)
-    path = filedialog.askdirectory(title='select root folder') + '/'
-    return path
-        
-def insertFilteredImage(r, rootFolder, labelImage, image):
-    filtered = ImageTk.PhotoImage(pilimage.open(image).resize((500,500)))
-    labelImage.configure(image=filtered)
-    labelImage.photo = filtered
-    print("updated image")    
-
-def median(rootFolder, label, r, labelImage, medianKernel):
-    cleanOutputDirectory(rootFolder)
-    createOutputDirectories(rootFolder)
-    createOutputDirectoriesOnlyChannels(rootFolder)
-    print('Starting denoising of calibration images with median filter...')
-    try:
-        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel.get())
-    except:
-        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + 3
-    os.system(rootFolder.denoiserPath + " " + denoiserArg1)
-    for file in os.listdir(rootFolder.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,rootFolder.calibrationPath)
-    for file1 in os.listdir(rootFolder.path):
-        if(file1.endswith(".tif")):
-            move(file1,rootFolder.calibrationPath)
-    
-    print('Starting denoising of treatment images with median filter...')   
-    try:
-        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel.get())
-    except:
-        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + 3
-    os.system(rootFolder.denoiserPath + " " + denoiserArg2)
-    for file in os.listdir(rootFolder.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,rootFolder.treatmentPath)
-    for file1 in os.listdir(rootFolder.path):
-        if(file1.endswith(".tif")):
-            move(file1,rootFolder.treatmentPath)
-            
-    label.config(text="MEDIAN FILTER APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
-
-def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, labelImage, deleteFolders, wienerKernel):
-    if deleteFolders:
-        cleanOutputDirectory(rootFolder)
-        createOutputDirectories(rootFolder)
-        createOutputDirectoriesOnlyChannels(rootFolder)   
-    print('Starting denoising of calibration images with wiener filter...')
-    try:
-        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel.get())
-    except:
-        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + 3
-    os.system(rootFolder.denoiserPath + " " + denoiserArg3)
-    for file in os.listdir(rootFolder.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest0 = os.path.join(rootFolder.calibrationPath,file)
-            move(file, dest0)
-    for file1 in os.listdir(rootFolder.path):
-        if(file1.endswith(".tif")):
-            dest1 = os.path.join(rootFolder.calibrationPath,file1)
-            move(file1, dest1)
-
-    print('Starting denoising of treatment images with wiener filter...')     
-    try:
-        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel.get())
-    except:
-        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + 3
-    os.system(rootFolder.denoiserPath + " " + denoiserArg4)
-    for file in os.listdir(rootFolder.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest2 = os.path.join(rootFolder.treatmentPath, file)
-            move(file, dest2)
-    for file1 in os.listdir(rootFolder.path):
-        if(file1.endswith(".tif")):
-            dest3 = os.path.join(rootFolder.treatmentPath,file1)
-            move(file1, dest3)
-    
-    label.config(text="WIENER FILTER APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
-
-def medianAndWiener(rootFolder, label, r, labelImage, medianKernel, wienerKernel):
-    cleanOutputDirectory(rootFolder)
-    createOutputDirectories(rootFolder)
-    createOutputDirectoriesOnlyChannels(rootFolder)
-    median(rootFolder, label, r, labelImage, medianKernel)
-    wiener(rootFolder, rootFolder.calibrationPath, rootFolder.treatmentPath, label, r, labelImage, False, wienerKernel)
-    
-    label.config(text="WIENER AND MEDIAN FILTERS APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
-
-def noDenoising(rootFolder, label, r, labelImage):
-    cleanOutputDirectory(rootFolder)
-    shutil.copytree(rootFolder.nonFilteredCalibrationPath,rootFolder.calibrationPath)
-    shutil.copytree(rootFolder.nonFilteredTreatmentPath, rootFolder.treatmentPath)
-    createOutputDirectories(rootFolder)
-    createOutputDirectoriesOnlyChannels(rootFolder)
-    label.config(text="NO FITLERS APPLIED")
-    insertFilteredImage(r, rootFolder, labelImage, rootFolder.nonFilteredTreatment_list[0])
-
-def getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration):
-    for unexposed_filepath in rootFolder.unexposed_calibration_list:    
-        try:
-            calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999, dimRoiCalibration))
-        except:
-            print('WARNING: No unexposed calibration film found')
-                
-    for calibration_filepath in rootFolder.calibration_list:
-        reg_search = re.search('.*calibration_(.*)Gy_.*', calibration_filepath)
-        calibrationObjects.append(calibrationClass(cv2.imread(calibration_filepath), redChannel, greenChannel, blueChannel, reg_search.group(1), 999, dimRoiCalibration))
-    
-    calibrationObjects.sort(key=lambda x: x.calibration_dose)
-    calibration_dose = [x.calibration_dose for x in calibrationObjects]
-    calibration_red = [x.calibrationRed for x in calibrationObjects]
-    calibration_green = [x.calibrationGreen for x in calibrationObjects]
-    calibration_blue = [x.calibrationBlue for x in calibrationObjects]
-    
-    return calibration_dose, calibration_red, calibration_green, calibration_blue
-
-def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults):
+def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres):
     multiChannelDosimetry=False
     calibration_dose, calibration_red, calibration_green, calibration_blue = getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration)
     fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, rootFolder, fitFunction, multiChannelDosimetry, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution )
@@ -206,14 +61,18 @@ def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p
         plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, rootFolder, resolution, dpi, dpiResolution, isodoseDifferenceGy, cmap, doseRawImageOutputFormat)
         plt.show()
         
-        if plotProfilesResults:
+        if plotProfilesResults ==1:
             plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:', dpiResolution)
             plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:', dpiResolution)
             plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:', dpiResolution)
         
         rootFolder = rootFolderClass(path)
 
-def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults):
+    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png')
+    clearVariablesAfterDosimetry()
+
+
+def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres):
     multiChannelDosimetry=True
     fitFunction='rational'
     calibration_dose, calibration_red, calibration_green, calibration_blue = getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration)
@@ -273,7 +132,7 @@ def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blu
                   blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum, rootFolder, resolution, dpi, dpiResolution, isodoseDifferenceGy, cmap, doseRawImageOutputFormat)
         plt.show()
         
-        if plotProfilesResults:
+        if plotProfilesResults==1:
             plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:', dpiResolution)
             plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:', dpiResolution)
             plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:', dpiResolution)
@@ -281,6 +140,150 @@ def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blu
                              threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:', dpiResolution)
             
         rootFolder = rootFolderClass(path)
+    
+    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png')
+    clearVariablesAfterDosimetry()
+    
+def clearVariablesAfterDosimetry():
+    calibrationObjects.clear()
+    unexposedTreatmentObjects.clear()
+    maxDoseTreatmentObjects.clear()
+    redDosObjArr.clear()
+    greenDosObjArr.clear()
+    blueDosObjArr.clear()
+    trheechDosObjArr.clear()
+        
+def cleanOutputDirectory(rootFolder):
+    try:
+        shutil.rmtree(os.path.join(rootFolder.dataPath, 'OUTPUT'))
+    except:
+        ...
+
+def createOutputDirectories(rootFolder):
+    try:
+        rootFolder = rootFolderClass(path)
+        os.mkdir(os.path.join(rootFolder.outputPath, '_CALIBRATION_FILTERED'))
+        os.mkdir(os.path.join(rootFolder.outputPath, '_TREATMENT_FILTERED'))
+    except:
+        ...
+        
+def createOutputDirectoriesOnlyChannels(rootFolder):
+    rootFolder = rootFolderClass(path)
+    os.mkdir(os.path.join(rootFolder.outputPath, '3CH'))
+    os.mkdir(os.path.join(rootFolder.outputPath, 'BLUE'))
+    os.mkdir(os.path.join(rootFolder.outputPath, 'GREEN'))
+    os.mkdir(os.path.join(rootFolder.outputPath, 'RED'))
+        
+def selectDirectory():
+    global path
+    browse = tk.Tk()
+    browse.withdraw()
+    browse.attributes('-topmost', True)
+    path = filedialog.askdirectory(title='select root folder') + '/'
+    return path
+        
+def insertImage(r, rootFolder, labelImage, image):
+    newimage = ImageTk.PhotoImage(pilimage.open(image).resize((500,500)))
+    labelImage.configure(image=newimage)
+    labelImage.photo = newimage
+    #print("updated image")    
+    
+def insertResImage(r, rootFolder, labelImage, image):
+    newimage = ImageTk.PhotoImage(pilimage.open(image))
+    labelImage.configure(image=newimage)
+    labelImage.photo = newimage
+    #print("updated image")   
+
+def median(rootFolder, label, r, labelImage, medianKernel):
+    cleanOutputDirectory(rootFolder)
+    createOutputDirectories(rootFolder)
+    createOutputDirectoriesOnlyChannels(rootFolder)
+    print('Starting denoising of calibration images with median filter...')
+    try:
+        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel.get())
+    except:
+        denoiserArg1 = '-d ' + rootFolder.nonFilteredCalibrationPath + ' -f median -k ' + 3
+    os.system(rootFolder.denoiserPath + " " + denoiserArg1)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            move(file,rootFolder.calibrationPath)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            move(file1,rootFolder.calibrationPath)
+    
+    print('Starting denoising of treatment images with median filter...')   
+    try:
+        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel.get())
+    except:
+        denoiserArg2 = '-d ' + rootFolder.nonFilteredTreatmentPath + ' -f median -k ' + 3
+    os.system(rootFolder.denoiserPath + " " + denoiserArg2)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            move(file,rootFolder.treatmentPath)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            move(file1,rootFolder.treatmentPath)
+            
+    label.config(text="MEDIAN FILTER APPLIED")
+    insertImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
+
+def wiener(rootFolder, wienerCalibrationPath, wienerTreatmentPath, label, r, labelImage, deleteFolders, wienerKernel):
+    if deleteFolders:
+        cleanOutputDirectory(rootFolder)
+        createOutputDirectories(rootFolder)
+        createOutputDirectoriesOnlyChannels(rootFolder)   
+    print('Starting denoising of calibration images with wiener filter...')
+    try:
+        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + str(wienerKernel.get())
+    except:
+        denoiserArg3 = '-d ' + wienerCalibrationPath + ' -f wiener -k ' + 3
+    os.system(rootFolder.denoiserPath + " " + denoiserArg3)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            dest0 = os.path.join(rootFolder.calibrationPath,file)
+            move(file, dest0)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            dest1 = os.path.join(rootFolder.calibrationPath,file1)
+            move(file1, dest1)
+
+    print('Starting denoising of treatment images with wiener filter...')     
+    try:
+        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + str(wienerKernel.get())
+    except:
+        denoiserArg4 = '-d ' + wienerTreatmentPath + ' -f wiener -k ' + 3
+    os.system(rootFolder.denoiserPath + " " + denoiserArg4)
+    for file in os.listdir(rootFolder.denoiserFolder):
+        if(file.endswith(".tif")):
+            dest2 = os.path.join(rootFolder.treatmentPath, file)
+            move(file, dest2)
+    for file1 in os.listdir(rootFolder.path):
+        if(file1.endswith(".tif")):
+            dest3 = os.path.join(rootFolder.treatmentPath,file1)
+            move(file1, dest3)
+    
+    label.config(text="WIENER FILTER APPLIED")
+    insertImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
+
+def medianAndWiener(rootFolder, label, r, labelImage, medianKernel, wienerKernel):
+    cleanOutputDirectory(rootFolder)
+    createOutputDirectories(rootFolder)
+    createOutputDirectoriesOnlyChannels(rootFolder)
+    median(rootFolder, label, r, labelImage, medianKernel)
+    wiener(rootFolder, rootFolder.calibrationPath, rootFolder.treatmentPath, label, r, labelImage, False, wienerKernel)
+    
+    label.config(text="WIENER AND MEDIAN FILTERS APPLIED")
+    insertImage(r, rootFolder, labelImage, rootFolder.treatment_list[0])
+
+def noDenoising(rootFolder, label, r, labelImage):
+    cleanOutputDirectory(rootFolder)
+    shutil.copytree(rootFolder.nonFilteredCalibrationPath,rootFolder.calibrationPath)
+    shutil.copytree(rootFolder.nonFilteredTreatmentPath, rootFolder.treatmentPath)
+    createOutputDirectories(rootFolder)
+    createOutputDirectoriesOnlyChannels(rootFolder)
+    label.config(text="NO FITLERS APPLIED")
+    insertImage(r, rootFolder, labelImage, rootFolder.nonFilteredTreatment_list[0])
+
         
 def a_recalibration(yp1, yp2, y1, y2):
     return (y2*yp1-y1*yp2)/(y2-y1)
@@ -553,6 +556,25 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     
     return fitResults, x_max_lsmodel, y_calibration_fit
 
+def getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration):
+    for unexposed_filepath in rootFolder.unexposed_calibration_list:    
+        try:
+            calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999, dimRoiCalibration))
+        except:
+            print('WARNING: No unexposed calibration film found')
+                
+    for calibration_filepath in rootFolder.calibration_list:
+        reg_search = re.search('.*calibration_(.*)Gy_.*', calibration_filepath)
+        calibrationObjects.append(calibrationClass(cv2.imread(calibration_filepath), redChannel, greenChannel, blueChannel, reg_search.group(1), 999, dimRoiCalibration))
+    
+    calibrationObjects.sort(key=lambda x: x.calibration_dose)
+    calibration_dose = [x.calibration_dose for x in calibrationObjects]
+    calibration_red = [x.calibrationRed for x in calibrationObjects]
+    calibration_green = [x.calibrationGreen for x in calibrationObjects]
+    calibration_blue = [x.calibrationBlue for x in calibrationObjects]
+    
+    return calibration_dose, calibration_red, calibration_green, calibration_blue
+
 def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, 
                            recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, rootFolder, fitFunction, maxdoseRecalibration):
     x_calibration_fit = np.linspace(0, x_max_lsmodel)
@@ -620,7 +642,6 @@ def calculate_final_dose_statistics(dose, dose_center, dose_shapex, dose_shapey)
     return dose_background_mean_x, dose_background_mean_y, maxd, avg, mind, std, half_maximum_x, half_maximum_y
 
 def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, rootFolder, resolution, dpi, dpiResolution, isodoseDifferenceGy, cmap, doseRawImageOutputFormat):
-    print(cmap)
     shape = np.shape(dose)
     x = np.arange(shape[1])*dpiResolution
     y = np.arange(shape[0])*dpiResolution
@@ -738,6 +759,7 @@ redDosObjArr = []
 greenDosObjArr = []
 blueDosObjArr = []
 trheechDosObjArr = []
+
 
 
 
