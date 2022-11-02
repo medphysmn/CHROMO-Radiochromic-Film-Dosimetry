@@ -13,7 +13,7 @@ A python based software used to measure radiochromic film dose using an efficien
 
 - **MULTI-CHANNEL DOSIMETRY** of multiple scans at the same time [1] [2] 
 - **SINGLE-CHANNEL DOSIMETRY** of multiple scans at the same time [2]
-- **USER INTERFACE**
+- **GRAFICAL USER INTERFACE**
 - **DOSIMETRY WITH FAST INTRA SCAN RECALIBRATION METHOD** of multiple scans at the same time [1] [2]
 - **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] 
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
