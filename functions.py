@@ -100,6 +100,8 @@ def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blu
         image = cv2.imread(scan_filepath)
         netImage = image
         
+        #fitResultsRecalibrated, x_max_lsmodel_recalibrated, y_calibration_fit_recalibrated = fitDataRecalibrated(unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], maxdoseRecalibration)
+        
         plotRecalibratedImages(x_max_lsmodel, unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], recalibrated_multichannel_response_curve_red, 
                                recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, i, 
                                a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, rootFolder, fitFunction, maxdoseRecalibration)
@@ -116,7 +118,7 @@ def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blu
         min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue = dose_calculations(dose_blue, 'b', 0, 0, multiChannelDosimetry, dimensioneRoiPixel)
         blueDosObjArr.append(doseClass(dose_blue, min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue))  
         
-        dose_3ch = (dose_blue_center + dose_red_center + dose_green_center)/3
+        dose_3ch = (dose_blue_center + dose_red_center + dose_green_center)/3 #inverse_recalibrated_multichannel_response_curve_3ch(((netImage[:,:,redChannel] + netImage[:,:,greenChannel] + netImage[:,:,blueChannel)/3), a_3ch, b_3ch, fitResults).clip(min=0)
         bkgx3ch, bkgy3ch  = (bkgxred + bkgxgreen + bkgxblue)/3 , (bkgyred + bkgygreen + bkgyblue)/3   
         min_3ch, max_3ch, avg_3ch, std_3ch, half_maximum_3ch_x,half_maximum_3ch_y, dose_3ch_center, bkgx3ch, bkgy3ch = dose_calculations(dose_3ch, '3ch', bkgx3ch, bkgy3ch, multiChannelDosimetry, dimensioneRoiPixel)
         trheechDosObjArr.append(doseClass(dose_3ch, min_3ch, max_3ch, avg_3ch, std_3ch, half_maximum_3ch_x, half_maximum_3ch_y, dose_3ch_center, bkgx3ch, bkgy3ch))  
@@ -308,7 +310,7 @@ def exponential(x, a, b, c):
 def exponential_inverse(x, a, b, c):
     return (-b)*np.log((x-c)/a) #TODO ORA È SEMPLICE ESPONENZIALE MA DOVRESTI FARE L'INVERSA
 
-def multichannel_model(a, x):
+def multichannel_model(a, x): #x e' la dose
     return a[0] + a[1]/(x+a[2])
 
 def multichannel_function(a, x, y):
@@ -508,7 +510,7 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
     plt.savefig(rootFolder.bluePath + "/response-dose_calibration_plot_blue.png", format='png')
     plt.show()
     
-    fitResults = fitResultsSingleChannel(poptRedInverse, poptGreenInverse, poptBlueInverse)
+    fitResults_inv = fitResultsSingleChannel(poptRedInverse, poptGreenInverse, poptBlueInverse)
     print(poptRedInverse)
     print(poptGreenInverse)
     print(poptBlueInverse)
@@ -559,6 +561,55 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.savefig(rootFolder.tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
         plt.show()
     
+    return fitResults_inv, x_max_lsmodel, y_calibration_fit
+
+def fitDataRecalibrated(unexposedTreatmentObjects, maxDoseTreatmentObjects, maxdoseRecalibration):
+    
+
+    xi = np.append(np.asanyarray(unexposedTreatmentObjects.calibrationRed, maxDoseTreatmentObjects.calibrationRed), 
+                   np.asanyarray(unexposedTreatmentObjects.calibrationGreen, maxDoseTreatmentObjects.calibrationGreen))
+    x = np.append(xi, np.asanyarray(unexposedTreatmentObjects.calibrationBlue, maxDoseTreatmentObjects.calibrationBlue))
+    yi = np.append(np.asanyarray(0, maxdoseRecalibration), np.asanyarray(0, maxdoseRecalibration))
+    y = np.append(yi, np.asanyarray(0, maxdoseRecalibration))
+    
+    fitResults_inv = least_squares(multichannel_function_inverse, a0multichannel, jac=jac_inverse, method='lm', args=(x, y), max_nfev=maximumIterationsFit*1000, verbose=1)
+    fitResults_inv.x
+    
+    x_calibration_fit = np.linspace(min(x), max(x))
+    y_calibration_fit = multichannel_model_inverse(fitResults_inv.x, x_calibration_fit)
+    plt.scatter(calibration_red, calibration_dose, color='red', label='red data')
+    plt.scatter(calibration_green, calibration_dose,color='green', label='green data')
+    plt.scatter(calibration_blue, calibration_dose, color='blue', label='blue data')
+    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
+    plt.xlabel("PV")
+    plt.ylabel("DOSE (Gy)")
+    plt.legend(loc='upper right')
+    plt.savefig(rootFolder.tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
+    plt.show()
+        
+    xi = np.append(np.asanyarray(calibration_dose), np.asanyarray(calibration_dose))
+    x = np.append( xi, np.asanyarray(calibration_dose))
+    x_max_lsmodel = max(x)
+    
+    yi = np.append(np.asanyarray(calibration_red), np.asanyarray(calibration_green))
+    y = np.append( yi, np.asanyarray(calibration_blue))
+        
+    fitResults = least_squares(multichannel_function, a0multichannel1, jac=jac, args=(x, y), verbose=1)
+    fitResults.x
+        
+    x_calibration_fit = np.linspace(0, x_max_lsmodel)
+    y_calibration_fit = multichannel_model(fitResults.x, x_calibration_fit)
+    
+    plt.scatter(calibration_dose, calibration_red, color='red', label='red data')
+    plt.scatter(calibration_dose, calibration_green, color='green', label='green data')
+    plt.scatter(calibration_dose, calibration_blue, color='blue', label='blue data')
+    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
+    plt.xlabel("DOSE (GY)")
+    plt.ylabel("PV")
+    plt.legend(loc='upper right')
+    plt.savefig(rootFolder.tchPath + "/dose-response_calibration_plot_3ch.png", format='png')
+    plt.show()
+    
     return fitResults, x_max_lsmodel, y_calibration_fit
 
 def getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration):
@@ -582,25 +633,27 @@ def getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoi
 
 def plotRecalibratedImages(x_max_lsmodel, unexposedObject, maxDoseObject, recalibrated_multichannel_response_curve_red, recalibrated_multichannel_response_curve_green, 
                            recalibrated_multichannel_response_curve_blue, y_calibration_fit, treatmentNumber, a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, rootFolder, fitFunction, maxdoseRecalibration):
-    x_calibration_fit = np.linspace(0, x_max_lsmodel)
-    y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit, a_red, b_red, fitResults)
-    y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit,a_green, b_green, fitResults)
-    y_calibration_fit_blue = recalibrated_multichannel_response_curve_blue(x_calibration_fit,a_blue, b_blue, fitResults)
-    plt.scatter(0, unexposedObject.calibrationRed, color='purple', label='red recalibration data')
-    plt.scatter(0, unexposedObject.calibrationGreen, color='lime', label='green recalibration data')
-    plt.scatter(0, unexposedObject.calibrationBlue, color='dodgerblue', label='blue recalibration data')
-    plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationRed, color='purple')
-    plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationGreen, color='lime')
-    plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationBlue, color='dodgerblue')
-    plt.plot(x_calibration_fit, y_calibration_fit_red, 'purple', label='recalibrated RED ' + fitFunction + ' model')
-    plt.plot(x_calibration_fit, y_calibration_fit_green, 'lime', label='recalibrated GREEN ' + fitFunction + ' model')
-    plt.plot(x_calibration_fit, y_calibration_fit_blue, 'dodgerblue', label= 'recalibrated BLUE ' + fitFunction + ' model')
-    plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
-    plt.xlabel("DOSE (Gy)")
-    plt.ylabel("PV")
-    plt.legend(loc='upper right')
-    plt.savefig(rootFolder.tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
-    plt.show()
+
+        x_calibration_fit = np.linspace(0, x_max_lsmodel)
+        y_calibration_fit_red = recalibrated_multichannel_response_curve_red(x_calibration_fit, a_red, b_red, fitResults)
+        y_calibration_fit_green = recalibrated_multichannel_response_curve_green(x_calibration_fit,a_green, b_green, fitResults)
+        y_calibration_fit_blue = recalibrated_multichannel_response_curve_blue(x_calibration_fit,a_blue, b_blue, fitResults)
+        plt.title("treatment "+ str(treatmentNumber + 1))
+        plt.scatter(0, unexposedObject.calibrationRed, color='purple', label='red recalibration data')
+        plt.scatter(0, unexposedObject.calibrationGreen, color='lime', label='green recalibration data')
+        plt.scatter(0, unexposedObject.calibrationBlue, color='dodgerblue', label='blue recalibration data')
+        plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationRed, color='purple')
+        plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationGreen, color='lime')
+        plt.scatter(maxdoseRecalibration, maxDoseObject.calibrationBlue, color='dodgerblue')
+        plt.plot(x_calibration_fit, y_calibration_fit_red, 'purple', label='recalibrated RED ' + fitFunction + ' model')
+        plt.plot(x_calibration_fit, y_calibration_fit_green, 'lime', label='recalibrated GREEN ' + fitFunction + ' model')
+        plt.plot(x_calibration_fit, y_calibration_fit_blue, 'dodgerblue', label= 'recalibrated BLUE ' + fitFunction + ' model')
+        plt.plot(x_calibration_fit, y_calibration_fit, label='fitted multichannel LS model', ls='dashed')
+        plt.xlabel("DOSE (Gy)")
+        plt.ylabel("PV")
+        plt.legend(loc='upper right')
+        plt.savefig(rootFolder.tchPath + "/dose-response_recalibrated_plot_" + "treatment_" + str(treatmentNumber + 1) + ".png", format='png')
+        plt.show()
 
 def calibration_factors_calculator(zeroResponse, maxdoseResponse, fitResults, maxdoseRecalibration):
         a = a_recalibration(zeroResponse, #x1
@@ -651,7 +704,7 @@ def plot_dose(dose, max_red, max_green, max_blue, stringcolor, stringoutput, i, 
     x = np.arange(shape[1])*dpiResolution
     y = np.arange(shape[0])*dpiResolution
     xx, yy = np.meshgrid(x, y)
-    levels = np.arange(0, int(math.ceil(max(max_red,max_green,max_blue)+3*isodoseDifferenceGy)), isodoseDifferenceGy)
+    levels = np.arange(0, int(math.ceil(max(max_red,max_green,max_blue)+1)), isodoseDifferenceGy)
     
     from PIL import Image
     doseImage = Image.fromarray(dose)
