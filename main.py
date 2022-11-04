@@ -15,18 +15,20 @@ from rootFolderClass import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
 
-widthTk = 1050
-heightTk = 770
+widthTk = 1070
+heightTk = 863
 imagedim = 500
 imagedimres = 432
 imagedimresh = 288
+imagedimcal = 400
+imagedimcalh = 220
 
 global path
 path = selectDirectory() 
 rootFolder = rootFolderClass(path)
 
 chromoTk = tk.Toplevel()
-chromoTk.title('CHROMO: Radiochromic Film Dosimetry')
+chromoTk.title('CHROMO: Radiochromic Film Dosimetry Tool')
 chromoTk.geometry(str(widthTk)+"x"+str(heightTk))
 chromoTk.config(background = "white")
 chromoTk.resizable(True, True)
@@ -51,6 +53,60 @@ imageframe = tk.Frame(denoiser, width=imagedim, height=imagedim)
 imageResized = pilimage.open("blank.jpg").resize((imagedim,imagedim))
 img = itk.PhotoImage(imageResized)
 labelImage = tk.Label(imageframe, image = img)
+
+imageframeredcal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedredcal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgredcal = itk.PhotoImage(imageResizedredcal)
+labelImageredcal = tk.Label(imageframeredcal, image = imgredcal)
+
+imageframegreencal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedgreencal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imggreencal = itk.PhotoImage(imageResizedgreencal)
+labelImagegreencal = tk.Label(imageframegreencal, image = imggreencal)
+
+imageframebluecal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedbluecal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgbluecal = itk.PhotoImage(imageResizedbluecal)
+labelImagebluecal = tk.Label(imageframebluecal, image = imgbluecal)
+
+imageframe3chcal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcal = itk.PhotoImage(imageResized3chcal)
+labelImage3chcal = tk.Label(imageframe3chcal, image = img3chcal)
+
+imageframe3chcalRecal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcalRecal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcalRecal = itk.PhotoImage(imageResized3chcalRecal)
+labelImage3chcalRecal = tk.Label(imageframe3chcalRecal, image = img3chcalRecal)
+
+
+
+imageframeredcal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedredcal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgredcal1 = itk.PhotoImage(imageResizedredcal1)
+labelImageredcal1 = tk.Label(imageframeredcal1, image = imgredcal1)
+
+imageframegreencal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedgreencal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imggreencal1 = itk.PhotoImage(imageResizedgreencal1)
+labelImagegreencal1 = tk.Label(imageframegreencal1, image = imggreencal1)
+
+imageframebluecal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedbluecal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgbluecal1 = itk.PhotoImage(imageResizedbluecal1)
+labelImagebluecal1 = tk.Label(imageframebluecal1, image = imgbluecal1)
+
+imageframe3chcal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcal1 = itk.PhotoImage(imageResized3chcal1)
+labelImage3chcal1 = tk.Label(imageframe3chcal1, image = img3chcal1)
+
+imageframe3chcalRecal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcalRecal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcalRecal1 = itk.PhotoImage(imageResized3chcalRecal1)
+labelImage3chcalRecal1 = tk.Label(imageframe3chcalRecal1, image = img3chcalRecal1)
+
+
 
 imageframeredres = tk.Frame(doseresultsTk, width=imagedimres, height=imagedimres)
 imageResizedredres = pilimage.open("blankres.jpg").resize((imagedimres,imagedimresh))
@@ -83,22 +139,42 @@ tk.Label(denoiser, text="Enter Wiener Kernel:", font=("Arial")).grid(column = 1,
 wienerval = tk.IntVar(denoiser, value=3)
 wienerKernelTk=tk.Entry(denoiser, width=80, textvariable=wienerval)
 
-imageframe.grid(column = 2, row = 3, padx=30, pady=10,rowspan=5)
+imageframe.grid(column = 2, row = 3, padx=30, pady=10, rowspan=5)
 labelImage.grid(column = 2, row = 3)
 medianKernelTk.grid(column = 2, row = 8)
 wienerKernelTk.grid(column = 2, row = 10)
 label_denoising.grid(column = 1, row = 3, padx=10, pady=10)
 # label_treatmentImage.grid(column = 2, row = 3, padx=10, pady=10)
 
+
+imageframeredcal.grid(column = 2, row = 2, padx=10, pady=10)
+labelImageredcal.grid(column = 2, row = 2, padx=10, pady=10)
+imageframegreencal.grid(column = 1, row = 3, padx=10, pady=10)
+labelImagegreencal.grid(column = 1, row = 3, padx=10, pady=10)
+imageframebluecal.grid(column = 2, row = 3, padx=10, pady=10)
+labelImagebluecal.grid(column = 2, row = 3, padx=10, pady=10)
+imageframe3chcal.grid(column = 1, row = 4, padx=10, pady=10)
+labelImage3chcal.grid(column = 1, row = 4, padx=10, pady=10)
+imageframe3chcalRecal.grid(column = 2, row = 4, padx=10, pady=10)
+labelImage3chcalRecal.grid(column = 2, row = 4, padx=10, pady=10)
+
+imageframeredcal1.grid(column = 2, row = 2, padx=10, pady=10)
+labelImageredcal1.grid(column = 2, row = 2, padx=10, pady=10)
+imageframegreencal1.grid(column = 1, row = 3, padx=10, pady=10)
+labelImagegreencal1.grid(column = 1, row = 3, padx=10, pady=10)
+imageframebluecal1.grid(column = 2, row = 3, padx=10, pady=10)
+labelImagebluecal1.grid(column = 2, row = 3, padx=10, pady=10)
+imageframe3chcal1.grid(column = 1, row = 4, padx=10, pady=10)
+labelImage3chcal1.grid(column = 1, row = 4, padx=10, pady=10)
+imageframe3chcalRecal1.grid(column = 2, row = 4, padx=10, pady=10)
+labelImage3chcalRecal1.grid(column = 2, row = 4, padx=10, pady=10)
+
 imageframeredres.grid(column = 0, row = 0, padx=25, pady=10)
 labelImageredres.grid(column = 0, row = 0, padx=25, pady=10)
-
 imageframegreenres.grid(column = 1, row = 0, padx=25, pady=10)
 labelImagegreenres.grid(column = 1, row = 0, padx=25, pady=10)
-
 imageframeblueres.grid(column = 0, row = 1, padx=25, pady=10)
 labelImageblueres.grid(column = 0, row = 1, padx=25, pady=10)
-
 imageframe3chres.grid(column = 1, row = 1, padx=25, pady=10)
 labelImage3chres.grid(column = 1, row = 1, padx=25, pady=10)
 
@@ -116,14 +192,19 @@ fittingfunctionselected = "rational"
 def selected():
     global fittingfunctionselected
     fittingfunctionselected = fittingval.get()
-    
-tk.Label(singleChannelTk, text="Choose one fitting function (rational or exponential):", font=("Arial")).grid(column = 2, row = 0, padx=20)
+
+tk.Label(multiChannelTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 1, row = 0, padx=30, pady=10)
+recval = tk.IntVar(multiChannelTk, value=6)
+recvalTk=tk.Entry(multiChannelTk, width=10, textvariable=recval)
+recvalTk.grid(column = 2, row = 0, pady=10)
+
+tk.Label(singleChannelTk, text="Choose one fitting function:", font=("Arial")).grid(column = 1, row = 0, padx=10,rowspan=2)
 fittingval = tk.StringVar(singleChannelTk, value='rational')
 fittingFunctionTk = tk.Radiobutton(singleChannelTk, text="rational", variable=fittingval, value="rational", command=selected)
 fittingFunction1Tk = tk.Radiobutton(singleChannelTk, text="exponential", padx = 20,variable=fittingval, value="exponential", command=selected)
 
-fittingFunctionTk.grid(column = 3, row = 0)
-fittingFunction1Tk.grid(column = 4, row = 0)
+fittingFunctionTk.grid(column = 2, row = 0)
+fittingFunction1Tk.grid(column = 2, row = 1)
 
 label_rational = tk.Label(propertiesTk, text="RATIONAL FUNCTION: \n f(x)= a + b/(x+c)", fg="blue", font=("Arial", 15)).grid(column = 1, row = 1, pady=10)
 label_rational = tk.Label(propertiesTk, text="Initial values for optimization", fg="blue", font=("Arial", 15)).grid(column = 4, row = 1, pady=10)
@@ -349,15 +430,10 @@ maxitval = tk.IntVar(propertiesTk, value=100000)
 maxitvalTk=tk.Entry(propertiesTk, width=10, textvariable=maxitval)
 maxitvalTk.grid(column = 2, row = 0)
 
-tk.Label(propertiesTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 4, row = 0, padx=30, pady=10)
-recval = tk.IntVar(propertiesTk, value=6)
-recvalTk=tk.Entry(propertiesTk, width=10, textvariable=recval)
-recvalTk.grid(column = 5, row = 0)
-
-tk.Label(propertiesTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 4, row = 0)
-recval = tk.IntVar(propertiesTk, value=6)
-recvalTk=tk.Entry(propertiesTk, width=10, textvariable=recval)
-recvalTk.grid(column = 5, row = 0)
+# tk.Label(propertiesTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 4, row = 0)
+# recval = tk.IntVar(propertiesTk, value=6)
+# recvalTk=tk.Entry(propertiesTk, width=10, textvariable=recval)
+# recvalTk.grid(column = 5, row = 0)
 
 tk.Label(generalPropertiesTk, text="Scanner resolution (mm):", font=("Arial")).grid(column = 1, row = 0)
 resval = tk.DoubleVar(generalPropertiesTk, value=25.4)
@@ -412,7 +488,7 @@ cmapvalTk.grid(column = 2, row = 7, padx=50, pady=10)
 
 
 
-button_singleCalibrtion = tk.Button(singleChannelTk, text = "START CALIBRATION", command = lambda: singleChannelDosimetryGUI(rootFolder, 
+button_singleCalibrtion = tk.Button(singleChannelTk, text = "START SINGLE CHANNEL CALIBRATION AND DOSIMETRY", command = lambda: singleChannelDosimetryGUI(rootFolder, 
                                                                                 fittingfunctionselected, 
                                                                                 (float(p0redTk.get()), float(p1redTk.get()), float(p2redTk.get())), 
                                                                                 (float(pinv0redTk.get()), float(pinv1redTk.get()), float(pinv2redTk.get() )), 
@@ -445,10 +521,10 @@ button_singleCalibrtion = tk.Button(singleChannelTk, text = "START CALIBRATION",
                                                                                 doseresultsTk, 
                                                                                 labelImageredres,
                                                                                 labelImagegreenres, 
-                                                                                labelImageblueres)).grid(column = 1, row = 0 , padx=10, pady=10)
+                                                                                labelImageblueres)).grid(column = 1, row = 2 , padx=10, pady=10)
 
 
-button_multichannelCalibration = tk.Button(multiChannelTk, text = "START CALIBRATION", command = lambda: multiChannelDosimetryGUI(rootFolder, 
+button_multichannelCalibration = tk.Button(multiChannelTk, text = "START MULTI-CHANNEL CALIBRATION AND DOSIMETRY", command = lambda: multiChannelDosimetryGUI(rootFolder, 
                                                                                (float(p0redTk.get()), float(p1redTk.get()), float(p2redTk.get())), 
                                                                                (float(pinv0redTk.get()), float(pinv1redTk.get()), float(pinv2redTk.get() )), 
                                                                                (float(p0greenTk.get()), float(p1greenTk.get()), float(p2greenTk.get())), 
@@ -481,7 +557,7 @@ button_multichannelCalibration = tk.Button(multiChannelTk, text = "START CALIBRA
                                                                                labelImageredres,
                                                                                labelImagegreenres, 
                                                                                labelImageblueres, 
-                                                                               labelImage3chres)).grid(column = 1, row = 0 , padx=10, pady=10)
+                                                                               labelImage3chres)).grid(column = 1, row = 2 , padx=10, pady=10)
 
 
 

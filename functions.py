@@ -585,27 +585,24 @@ def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, c
         plt.savefig(rootFolder.tchPath + "/response-dose_calibration_plot_3ch.png", format='png')
         plt.show()
         
-
-    
     return fitResults_inv, fitResults, x_max_lsmodel, y_calibration_fit
 
-def fitDataRecalibrated(unexposedTreatmentObjects, maxDoseTreatmentObjects, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution ):
+# def fitDataRecalibrated(unexposedTreatmentObjects, maxDoseTreatmentObjects, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution ):
     
+#     xi = np.append(np.asanyarray([unexposedTreatmentObjects.calibrationRed, maxDoseTreatmentObjects.calibrationRed]), 
+#                    np.asanyarray([unexposedTreatmentObjects.calibrationGreen, maxDoseTreatmentObjects.calibrationGreen]))
+#     x = np.append(xi, np.asanyarray([unexposedTreatmentObjects.calibrationBlue, maxDoseTreatmentObjects.calibrationBlue]))
+#     yi = np.append(np.array([0, maxdoseRecalibration]), np.array([0, maxdoseRecalibration]))
+#     y = np.append(yi, np.array([0, maxdoseRecalibration]))
+    
+#     x_calibration_fit = np.linspace(min(x), max(x))
+#     fitResults_inv = least_squares(multichannel_function_inverse, a0multichannel, jac=jac_inverse, method='lm', args=(x, y), max_nfev=maximumIterationsFit*1000, verbose=1)
+#     fitResults_inv.x
+    
+#     y_calibration_fit_recal = multichannel_model(fitResults_inv.x, x_calibration_fit)
 
-    xi = np.append(np.asanyarray([unexposedTreatmentObjects.calibrationRed, maxDoseTreatmentObjects.calibrationRed]), 
-                   np.asanyarray([unexposedTreatmentObjects.calibrationGreen, maxDoseTreatmentObjects.calibrationGreen]))
-    x = np.append(xi, np.asanyarray([unexposedTreatmentObjects.calibrationBlue, maxDoseTreatmentObjects.calibrationBlue]))
-    yi = np.append(np.array([0, maxdoseRecalibration]), np.array([0, maxdoseRecalibration]))
-    y = np.append(yi, np.array([0, maxdoseRecalibration]))
     
-    x_calibration_fit = np.linspace(min(x), max(x))
-    fitResults_inv = least_squares(multichannel_function_inverse, a0multichannel, jac=jac_inverse, method='lm', args=(x, y), max_nfev=maximumIterationsFit*1000, verbose=1)
-    fitResults_inv.x
-    
-    y_calibration_fit_recal = multichannel_model(fitResults_inv.x, x_calibration_fit)
-
-    
-    return fitResults_inv, y_calibration_fit_recal
+#     return fitResults_inv, y_calibration_fit_recal
 
 def getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration):
     for unexposed_filepath in rootFolder.unexposed_calibration_list:    
