@@ -2,7 +2,6 @@
 # coding: utf-8
 
 #TODO NET IMAGE - BKG - CORREZIONE LATERALE
-import warnings
 import sys
 import tkinter
 import tkinter.ttk as ttk
@@ -15,8 +14,6 @@ from doseClass import *
 from rootFolderClass import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
-
-warnings.filterwarnings("ignore")
 
 widthTk = 1050
 heightTk = 770
@@ -76,7 +73,7 @@ img3chres = itk.PhotoImage(imageResized3chres)
 labelImage3chres = tk.Label(imageframe3chres, image = img3chres)
 
 label_denoising = tk.Label(denoiser, text="CHOOSE ONE OPTION TO LOAD \n AND DENOISE CALIBRATION AND \n TREATMENT IMAGES:", fg="blue", font=("Arial", 15), width=35)
-label_treatmentImage = tk.Label(denoiser, text="FILTERED RADIOCHROMIC FILM", font=("Arial", 10))
+# label_treatmentImage = tk.Label(denoiser, text="FILTERED RADIOCHROMIC FILM", font=("Arial", 10))
 
 tk.Label(denoiser, text="Enter Median Kernel:", font=("Arial")).grid(column = 1, row = 8, pady=5)
 medinalval = tk.IntVar(denoiser, value=3)
@@ -91,7 +88,7 @@ labelImage.grid(column = 2, row = 3)
 medianKernelTk.grid(column = 2, row = 8)
 wienerKernelTk.grid(column = 2, row = 10)
 label_denoising.grid(column = 1, row = 3, padx=10, pady=10)
-label_treatmentImage.grid(column = 2, row = 3, padx=10, pady=10)
+# label_treatmentImage.grid(column = 2, row = 3, padx=10, pady=10)
 
 imageframeredres.grid(column = 0, row = 0, padx=25, pady=10)
 labelImageredres.grid(column = 0, row = 0, padx=25, pady=10)
