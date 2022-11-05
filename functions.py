@@ -25,7 +25,7 @@ from fitResultsSingleChannel import *
 from rootFolderClass import *
 from doseClass import *
 
-def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres, labelImagegreenres, labelImageblueres):
+def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres, labelImagegreenres, labelImageblueres, singleChannelTk, labelImageredcal, labelImagegreencal, labelImagebluecal):
     multiChannelDosimetry=False
     calibration_dose, calibration_red, calibration_green, calibration_blue = getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration)
     fitResultsInv, fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, rootFolder, fitFunction, multiChannelDosimetry, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution )
@@ -68,13 +68,18 @@ def singleChannelDosimetryGUI(rootFolder, fitFunction, p0red, p0red1, p0green, p
         
         rootFolder = rootFolderClass(path)
 
-    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png')
-    insertResImage(doseresultsTk, rootFolder, labelImagegreenres, rootFolder.outputPath + '/GREEN/dose_green_treatment_1_figure.png')
-    insertResImage(doseresultsTk, rootFolder, labelImageblueres, rootFolder.outputPath + '/BLUE/dose_blue_treatment_1_figure.png')
+    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png', 452, 300)
+    insertResImage(doseresultsTk, rootFolder, labelImagegreenres, rootFolder.outputPath + '/GREEN/dose_green_treatment_1_figure.png', 452, 300)
+    insertResImage(doseresultsTk, rootFolder, labelImageblueres, rootFolder.outputPath + '/BLUE/dose_blue_treatment_1_figure.png', 452, 300)
+    
+    insertResImage(singleChannelTk, rootFolder, labelImageredcal, rootFolder.outputPath + '/RED/response-dose_calibration_plot_red.png', 432, 288)
+    insertResImage(singleChannelTk, rootFolder, labelImagegreencal, rootFolder.outputPath + '/GREEN/response-dose_calibration_plot_green.png', 432, 288)
+    insertResImage(singleChannelTk, rootFolder, labelImagebluecal, rootFolder.outputPath + '/BLUE/response-dose_calibration_plot_blue.png', 432, 288)
+    
     clearVariablesAfterDosimetry()
 
 
-def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres, labelImagegreenres, labelImageblueres, labelImage3chres):
+def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution, plotProfilesResults, doseresultsTk, labelImageres, labelImagegreenres, labelImageblueres, labelImage3chres, multiChannelTk, labelImageredcal1, labelImagegreencal1, labelImagebluecal1, labelImage3chcal1, labelImage3chcalRecal1):
     multiChannelDosimetry=True
     fitFunction='rational'
     calibration_dose, calibration_red, calibration_green, calibration_blue = getCalibrationdose(rootFolder, redChannel, greenChannel, blueChannel, dimRoiCalibration)
@@ -160,10 +165,18 @@ def multiChannelDosimetryGUI(rootFolder, p0red, p0red1, p0green, p0green1, p0blu
             
         rootFolder = rootFolderClass(path)
     
-    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png')
-    insertResImage(doseresultsTk, rootFolder, labelImagegreenres, rootFolder.outputPath + '/GREEN/dose_green_treatment_1_figure.png')
-    insertResImage(doseresultsTk, rootFolder, labelImageblueres, rootFolder.outputPath + '/BLUE/dose_blue_treatment_1_figure.png')
-    insertResImage(doseresultsTk, rootFolder, labelImage3chres, rootFolder.outputPath + '/3CH/dose_3ch_treatment_1_figure.png')
+    insertResImage(doseresultsTk, rootFolder, labelImageres, rootFolder.outputPath + '/RED/dose_red_treatment_1_figure.png', 452, 300)
+    insertResImage(doseresultsTk, rootFolder, labelImagegreenres, rootFolder.outputPath + '/GREEN/dose_green_treatment_1_figure.png', 452, 300)
+    insertResImage(doseresultsTk, rootFolder, labelImageblueres, rootFolder.outputPath + '/BLUE/dose_blue_treatment_1_figure.png', 452, 300)
+    insertResImage(doseresultsTk, rootFolder, labelImage3chres, rootFolder.outputPath + '/3CH/dose_3ch_treatment_1_figure.png', 452, 300)
+    
+    
+    insertResImage(multiChannelTk, rootFolder, labelImageredcal1, rootFolder.outputPath + '/RED/response-dose_calibration_plot_red.png', 422, 240)
+    insertResImage(multiChannelTk, rootFolder, labelImagegreencal1, rootFolder.outputPath + '/GREEN/response-dose_calibration_plot_green.png', 422, 240)
+    insertResImage(multiChannelTk, rootFolder, labelImagebluecal1, rootFolder.outputPath + '/BLUE/response-dose_calibration_plot_blue.png', 422, 240)
+    insertResImage(multiChannelTk, rootFolder, labelImage3chcal1, rootFolder.outputPath + '/3CH/response-dose_calibration_plot_3ch.png', 422, 240)
+    insertResImage(multiChannelTk, rootFolder, labelImage3chcalRecal1, rootFolder.outputPath + '/3CH/dose-response_recalibrated_plot_treatment_1.png', 422, 240)
+
     clearVariablesAfterDosimetry()
     
 def clearVariablesAfterDosimetry():
@@ -210,8 +223,8 @@ def insertImage(r, rootFolder, labelImage, image):
     labelImage.photo = newimage
     #print("updated image")    
     
-def insertResImage(r, rootFolder, labelImage, image):
-    newimage = ImageTk.PhotoImage(pilimage.open(image))
+def insertResImage(r, rootFolder, labelImage, image, w, h):
+    newimage = ImageTk.PhotoImage(pilimage.open(image).resize((w,h)))
     labelImage.configure(image=newimage)
     labelImage.photo = newimage
     #print("updated image")   
