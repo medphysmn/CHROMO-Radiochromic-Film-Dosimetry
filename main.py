@@ -152,14 +152,14 @@ labelImage3chcal1.grid(column = 1, row = 4, padx=30, pady=3)
 imageframe3chcalRecal1.grid(column = 2, row = 4, padx=30, pady=3)
 labelImage3chcalRecal1.grid(column = 2, row = 4, padx=30, pady=3)
 
-imageframeredres.grid(column = 0, row = 0, padx=25, pady=30)
-labelImageredres.grid(column = 0, row = 0, padx=25, pady=30)
-imageframegreenres.grid(column = 1, row = 0, padx=25, pady=30)
-labelImagegreenres.grid(column = 1, row = 0, padx=25, pady=30)
-imageframeblueres.grid(column = 0, row = 1, padx=25, pady=30)
-labelImageblueres.grid(column = 0, row = 1, padx=25, pady=30)
-imageframe3chres.grid(column = 1, row = 1, padx=25, pady=30)
-labelImage3chres.grid(column = 1, row = 1, padx=25, pady=30)
+imageframeredres.grid(column = 0, row = 1, padx=25, pady=20)
+labelImageredres.grid(column = 0, row = 1, padx=25, pady=20)
+imageframegreenres.grid(column = 1, row = 1, padx=25, pady=20)
+labelImagegreenres.grid(column = 1, row = 1, padx=25, pady=20)
+imageframeblueres.grid(column = 0, row = 2, padx=25, pady=20)
+labelImageblueres.grid(column = 0, row = 2, padx=25, pady=20)
+imageframe3chres.grid(column = 1, row = 2, padx=25, pady=20)
+labelImage3chres.grid(column = 1, row = 2, padx=25, pady=20)
 
 denoisingval = tk.StringVar(singleChannelTk, value='none')
 button_median = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH MEDIAN FILTER", variable=denoisingval,value="m",
@@ -469,6 +469,8 @@ cmapval = tk.StringVar(generalPropertiesTk, value='rainbow')
 cmapvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=cmapval)
 cmapvalTk.grid(column = 2, row = 7, padx=50, pady=10)
 
+resultfoderbutton = tk.Button(doseresultsTk, text="BROWSE RESULT FOLDER", command= lambda: openresultfolder(rootFolder))
+resultfoderbutton.grid(row=0, column=0, pady=27, columnspan=2)
 
 
 button_singleCalibrtion = tk.Button(singleChannelTk, text = "START SINGLE CHANNEL CALIBRATION AND DOSIMETRY", command = lambda: singleChannelDosimetryGUI(rootFolder, 

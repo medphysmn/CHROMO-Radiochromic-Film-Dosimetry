@@ -455,6 +455,9 @@ def projectionSingle(image):
     xprofile = image[int(sizex/2) , :]
     return(xprofile, yprofile)
 
+def openresultfolder(rootfrootFolderolder):
+    os.startfile(rootFolder.outputPath)
+    
 def fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green, calibration_blue, rootFolder, fitFunction, multiChannelDosimetry, p0red, p0red1, p0green, p0green1, p0blue, p0blue1, p0redexp, p0red1exp, p0greenexp, p0green1exp, p0blueexp, p0blue1exp, a0multichannel, a0multichannel1, maximumIterationsFit, maxdoseRecalibration, cmap, doseRawImageOutputFormat , isodoseDifferenceGy , dimensioneRoiPixel, dimRoiCalibration, redChannel, greenChannel, blueChannel, resolution, dpi, dpiResolution ):
     
     d = np.linspace(np.min(calibration_dose), np.max(calibration_dose))
