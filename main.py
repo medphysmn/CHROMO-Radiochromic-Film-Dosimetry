@@ -1,204 +1,562 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-#TODO PROIEZIONI - NET IMAGE - BKG - CORREZIONE LATERALE - FILE CONFIGURAZIONE TXT
-#TODO ORA IL CALCOLO DELLA DOSE E CON METODO RAZIONALE MULTICANALE POI RICALIBRATO MA SEMPRE RAZIONALE
-#BISOGNEREBBE METTERE LA POSSIBILITA DI NON UTILIZZARE IL METODO DELLA RICALIBRAZIONE MA ANCHE SEMPLICE DOSIMETRIA MONOCANALE CON DIVERSE FUNZIONI ES RAZIONALE ESPONENZIALE ECC..
-import scipy
-import numpy as np
-import re
-import matplotlib.pyplot as plt
-import cv2
-import warnings
+#TODO NET IMAGE - BKG - CORREZIONE LATERALE
 import sys
-from scipy.optimize import *
-from scipy.interpolate import *
-from shutil import move, copyfile
-import os
+import tkinter
+import tkinter.ttk as ttk
+from tkinter import filedialog
+from sys import exit
 
 sys.path.append(".")
-from constants import *
 from functions import *
 from doseClass import *
-from rootClass import *
+from rootFolderClass import *
 from calibrationClass import *
 from fitResultsSingleChannel import *
 
-warnings.filterwarnings("ignore")
+widthTk = 1100
+heightTk = 850
+imagedim = 500
+imagedimres = 432
+imagedimresh = 288
+imagedimcal = 400
+imagedimcalh = 220
 
+global path
 path = selectDirectory() 
-root = rootClass(path)
-cleanOutputDirectory(root)
-createOutputDirectories(root)
+rootFolder = rootFolderClass(path)
 
-if medianFilter:
-    print('Starting denoising of calibration images with median filter...')
-    denoiserArg1 = '-d ' + root.nonFilteredCalibrationPath + ' -f median -k ' + str(medianKernel)
-    os.system(root.denoiserPath + " " + denoiserArg1)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,root.calibrationPath)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            move(file1,root.calibrationPath)
-    
-    print('Starting denoising of treatment images with median filter...')     
-    denoiserArg2 = '-d ' + root.nonFilteredTreatmentPath + ' -f median -k ' + str(medianKernel)
-    os.system(root.denoiserPath + " " + denoiserArg2)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            move(file,root.treatmentPath)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            move(file1,root.treatmentPath)
-else:
-    for fileNonFilteredCalibration in os.listdir(root.nonFilteredCalibrationPath):
-        copyfile(fileNonFilteredCalibration, root.calibrationPath)
-    for fileNonFilteredTreatment in os.listdir(root.nonFilteredTreatmentPath):
-            copyfile(fileNonFilteredTreatment, root.treatmentPath)
+chromoTk = tk.Toplevel()
+chromoTk.title('CHROMO: Radiochromic Film Dosimetry Tool')
+chromoTk.geometry(str(widthTk)+"x"+str(heightTk))
+chromoTk.config(background = "white")
+chromoTk.resizable(True, True)
 
-if wienerFilter:
-    print('Starting denoising of calibration images with wiener filter...')
-    denoiserArg3 = '-d ' + root.calibrationPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(root.denoiserPath + " " + denoiserArg3)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest0 = os.path.join(root.calibrationPath,file)
-            move(file, dest0)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            dest1 = os.path.join(root.calibrationPath,file1)
-            move(file1, dest1)
+tabsystem = ttk.Notebook(chromoTk)
+denoiser = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+singleChannelTk = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+multiChannelTk = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+doseresultsTk = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+propertiesTk = tk.Frame(tabsystem, width= widthTk, height= heightTk)
+generalPropertiesTk = tk.Frame(tabsystem, width= widthTk, height= heightTk)
 
-    print('Starting denoising of treatment images with wiener filter...')     
-    denoiserArg4 = '-d ' + root.treatmentPath + ' -f wiener -k ' + str(wienerKernel)
-    os.system(root.denoiserPath + " " + denoiserArg4)
-    for file in os.listdir(root.denoiserFolder):
-        if(file.endswith(".tif")):
-            dest2 = os.path.join(root.treatmentPath, file)
-            move(file, dest2)
-    for file1 in os.listdir(root.path):
-        if(file1.endswith(".tif")):
-            dest3 = os.path.join(root.treatmentPath,file1)
-            move(file1, dest3)
-            
-for unexposed_filepath in root.unexposed_calibration_list:
-    try:
-        calibrationObjects.append(calibrationClass(cv2.imread(unexposed_filepath), redChannel, greenChannel, blueChannel, 0, 999))
-    except:
-        print('WARNING: No unexposed calibration film found')
-            
-for calibration_filepath in root.calibration_list:
-    reg_search = re.search('.*calibration_(.*)Gy_.*', calibration_filepath)
-    calibrationObjects.append(calibrationClass(cv2.imread(calibration_filepath), redChannel, greenChannel, blueChannel, reg_search.group(1), 999))
+tabsystem.add(denoiser, text='Denoiser')
+tabsystem.add(singleChannelTk, text='Single Channel Dosimetry')
+tabsystem.add(multiChannelTk, text='Multi Channel Dosimetry')
+tabsystem.add(doseresultsTk, text='Dose Results')
+tabsystem.add(propertiesTk, text='Calibration Properties')
+tabsystem.add(generalPropertiesTk, text='General Properties')
+tabsystem.grid(column = 1, row = 0)
 
-calibrationObjects.sort(key=lambda x: x.calibration_dose)
-calibration_dose = [x.calibration_dose for x in calibrationObjects]
-calibration_red = [x.calibrationRed for x in calibrationObjects]
-calibration_green = [x.calibrationGreen for x in calibrationObjects]
-calibration_blue = [x.calibrationBlue for x in calibrationObjects]
-      
-if singleChannelDosimetry:
-    
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
+imageframe = tk.Frame(denoiser, width=imagedim, height=imagedim)
+imageResized = pilimage.open("blank.jpg").resize((imagedim,imagedim))
+img = itk.PhotoImage(imageResized)
+labelImage = tk.Label(imageframe, image = img)
 
-    for i, scan_filepath in enumerate(root.treatment_list):  
-           
-        print("TREATMENT NUMBER " , i+1, '\n')
-        print(" Treatment file analyzed = %s" % (scan_filepath), '\n')
-        
-        image = cv2.imread(scan_filepath)
-        netImage = image
-        
-        dose_red =  calculateSingleChannelDose(netImage[:,:,redChannel], fitResults.redFit).clip(min=0)
-        min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred = dose_calculations(dose_red, 'r', 0, 0)
-        redDosObjArr.append(doseClass(dose_red, min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred))
-        
-        dose_green =  calculateSingleChannelDose(netImage[:,:,greenChannel], fitResults.greenFit).clip(min=0)
-        min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen = dose_calculations(dose_green, 'g', 0, 0)
-        greenDosObjArr.append(doseClass(dose_green, min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen))    
-        
-        dose_blue =  calculateSingleChannelDose(netImage[:,:,blueChannel], fitResults.blueFit).clip(min=0)
-        min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue = dose_calculations(dose_blue, 'b', 0, 0)
-        blueDosObjArr.append(doseClass(dose_blue, min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue))  
-        
-    for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr)):
-        
-        print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
-        print('DOSES AND PROFILES: \n')
-    
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
-        plt.show()
-        
-        if plotProfilesResults:
-            plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:')
-            plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
-            plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
+imageframeredcal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedredcal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgredcal = itk.PhotoImage(imageResizedredcal)
+labelImageredcal = tk.Label(imageframeredcal, image = imgredcal)
 
-    
-elif multiChannelDosimetry:
-      
-    for i, (unexposed_treatment_filepath, maxdose_treatment_filepath) in enumerate(zip(root.unexposed_treatment_list, root.maxdose_treatment_list)):
-        unexposedTreatmentObjects.append(calibrationClass(cv2.imread(unexposed_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))
-        maxDoseTreatmentObjects.append(calibrationClass(cv2.imread(maxdose_treatment_filepath), redChannel, greenChannel, blueChannel, 999, i))  
-             
-    fitResults, x_max_lsmodel, y_calibration_fit = fitDataAndPlotCurves(calibration_dose, calibration_red, calibration_green , calibration_blue, root)
-    
-    for i, scan_filepath in enumerate(root.treatment_list):  
-           
-        a_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[0]  
-        b_red = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationRed, maxDoseTreatmentObjects[i].calibrationRed, fitResults)[1]  
-        a_green = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationGreen, maxDoseTreatmentObjects[i].calibrationGreen, fitResults)[0]  
-        b_green = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationGreen, maxDoseTreatmentObjects[i].calibrationGreen, fitResults)[1]  
-        a_blue = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationBlue, maxDoseTreatmentObjects[i].calibrationBlue, fitResults)[0]  
-        b_blue = calibration_factors_calculator(unexposedTreatmentObjects[i].calibrationBlue, maxDoseTreatmentObjects[i].calibrationBlue, fitResults)[1]  
-        
-        print("TREATMENT NUMBER " , i+1, '\n')
-        print(" Treatment file analyzed = %s" % (scan_filepath), '\n')
-        
-        image = cv2.imread(scan_filepath)
-        netImage = image
-        
-        plotRecalibratedImages(x_max_lsmodel, unexposedTreatmentObjects[i], maxDoseTreatmentObjects[i], recalibrated_multichannel_response_curve_red, 
-                               recalibrated_multichannel_response_curve_green, recalibrated_multichannel_response_curve_blue, y_calibration_fit, i, 
-                               a_red, b_red, a_green, b_green, a_blue, b_blue, fitResults, root)
-          
-        dose_red =  inverse_recalibrated_multichannel_response_curve_red(netImage[:,:,redChannel], a_red, b_red, fitResults).clip(min=0)
-        min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred = dose_calculations(dose_red, 'r', 0, 0)
-        redDosObjArr.append(doseClass(dose_red, min_red, max_red, avg_red, std_red, half_maximum_red_x, half_maximum_red_y, dose_red_center, bkgxred, bkgyred))
-        
-        dose_green =  inverse_recalibrated_multichannel_response_curve_green(netImage[:,:,greenChannel], a_green, b_green, fitResults).clip(min=0)
-        min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen = dose_calculations(dose_green, 'g', 0, 0)
-        greenDosObjArr.append(doseClass(dose_green, min_green, max_green, avg_green, std_green, half_maximum_green_x, half_maximum_green_y, dose_green_center, bkgxgreen, bkgygreen))    
-        
-        dose_blue =  inverse_recalibrated_multichannel_response_curve_blue(netImage[:,:,blueChannel], a_blue, b_blue, fitResults).clip(min=0)
-        min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue = dose_calculations(dose_blue, 'b', 0, 0)
-        blueDosObjArr.append(doseClass(dose_blue, min_blue, max_blue, avg_blue, std_blue, half_maximum_blue_x, half_maximum_blue_y, dose_blue_center, bkgxblue, bkgyblue))  
-        
-        dose_3ch = (dose_blue_center + dose_red_center + dose_green_center)/3
-        bkgx3ch, bkgy3ch  = (bkgxred + bkgxgreen + bkgxblue)/3 , (bkgyred + bkgygreen + bkgyblue)/3   
-        min_3ch, max_3ch, avg_3ch, std_3ch, half_maximum_3ch_x,half_maximum_3ch_y, dose_3ch_center, bkgx3ch, bkgy3ch = dose_calculations(dose_3ch, '3ch', bkgx3ch, bkgy3ch)
-        trheechDosObjArr.append(doseClass(dose_3ch, min_3ch, max_3ch, avg_3ch, std_3ch, half_maximum_3ch_x, half_maximum_3ch_y, dose_3ch_center, bkgx3ch, bkgy3ch))  
-    
-    for enum, (redDosObjTrm, greenDosObjTrm, blueDosObjTrm, threechDosObjTrm) in enumerate(zip(redDosObjArr, greenDosObjArr, blueDosObjArr, trheechDosObjArr )):
-        
-        print("TREATMENT NUMBER " , enum+1, '\n')
-        print(" filepath = %s" % (root.treatment_list[enum]), '\n')
-        print('DOSES AND PROFILES: \n')
-    
-        plot_dose(redDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Red', '/RED/dose_red', enum, root)
-        plot_dose(greenDosObjTrm.dosefiltered,redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Green', '/GREEN/dose_green', enum, root)
-        plot_dose(blueDosObjTrm.dosefiltered, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, blueDosObjTrm.maxdos, 'Blue', '/BLUE/dose_blue', enum, root)
-        plot_dose((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, redDosObjTrm.maxdos, greenDosObjTrm.maxdos, 
-                  blueDosObjTrm.maxdos, '3 channel', '/3CH/dose_3ch', enum, root)
-        plt.show()
-        
-        if plotProfilesResults:
-            plot_projections(redDosObjTrm.dosefiltered, 'red', 'r-', redDosObjTrm.half_maximum_xdos, redDosObjTrm.half_maximum_ydos, 'ro:')
-            plot_projections(greenDosObjTrm.dosefiltered, 'green', 'g-', greenDosObjTrm.half_maximum_xdos, greenDosObjTrm.half_maximum_ydos, 'go:')
-            plot_projections(blueDosObjTrm.dosefiltered, 'blue', 'b-', blueDosObjTrm.half_maximum_xdos, blueDosObjTrm.half_maximum_ydos, 'bo:')
-            plot_projections((redDosObjTrm.dosefiltered + greenDosObjTrm.dosefiltered + blueDosObjTrm.dosefiltered)/3, '3 channel', 'y-', 
-                             threechDosObjTrm.half_maximum_xdos, threechDosObjTrm.half_maximum_ydos, 'yo:')
+imageframegreencal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedgreencal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imggreencal = itk.PhotoImage(imageResizedgreencal)
+labelImagegreencal = tk.Label(imageframegreencal, image = imggreencal)
+
+imageframebluecal = tk.Frame(singleChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedbluecal = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgbluecal = itk.PhotoImage(imageResizedbluecal)
+labelImagebluecal = tk.Label(imageframebluecal, image = imgbluecal)
+
+
+
+imageframeredcal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedredcal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgredcal1 = itk.PhotoImage(imageResizedredcal1)
+labelImageredcal1 = tk.Label(imageframeredcal1, image = imgredcal1)
+
+imageframegreencal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedgreencal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imggreencal1 = itk.PhotoImage(imageResizedgreencal1)
+labelImagegreencal1 = tk.Label(imageframegreencal1, image = imggreencal1)
+
+imageframebluecal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResizedbluecal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+imgbluecal1 = itk.PhotoImage(imageResizedbluecal1)
+labelImagebluecal1 = tk.Label(imageframebluecal1, image = imgbluecal1)
+
+imageframe3chcal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcal1 = itk.PhotoImage(imageResized3chcal1)
+labelImage3chcal1 = tk.Label(imageframe3chcal1, image = img3chcal1)
+
+imageframe3chcalRecal1 = tk.Frame(multiChannelTk, width=imagedimcal, height=imagedimcal)
+imageResized3chcalRecal1 = pilimage.open("blankres.jpg").resize((imagedimcal,imagedimcalh))
+img3chcalRecal1 = itk.PhotoImage(imageResized3chcalRecal1)
+labelImage3chcalRecal1 = tk.Label(imageframe3chcalRecal1, image = img3chcalRecal1)
+
+imageframeredres = tk.Frame(doseresultsTk, width=imagedimres, height=imagedimres)
+imageResizedredres = pilimage.open("blankres.jpg").resize((imagedimres,imagedimresh))
+imgredres = itk.PhotoImage(imageResizedredres)
+labelImageredres = tk.Label(imageframeredres, image = imgredres)
+
+imageframegreenres = tk.Frame(doseresultsTk, width=imagedimres, height=imagedimres)
+imageResizedgreenres = pilimage.open("blankres.jpg").resize((imagedimres,imagedimresh))
+imggreenres = itk.PhotoImage(imageResizedgreenres)
+labelImagegreenres = tk.Label(imageframegreenres, image = imggreenres)
+
+imageframeblueres = tk.Frame(doseresultsTk, width=imagedimres, height=imagedimres)
+imageResizedblueres = pilimage.open("blankres.jpg").resize((imagedimres,imagedimresh))
+imgblueres = itk.PhotoImage(imageResizedblueres)
+labelImageblueres = tk.Label(imageframeblueres, image = imgblueres)
+
+imageframe3chres = tk.Frame(doseresultsTk, width=imagedimres, height=imagedimres)
+imageResized3chres = pilimage.open("blankres.jpg").resize((imagedimres,imagedimresh))
+img3chres = itk.PhotoImage(imageResized3chres)
+labelImage3chres = tk.Label(imageframe3chres, image = img3chres)
+
+label_denoising = tk.Label(denoiser, text="CHOOSE ONE OPTION TO LOAD \n AND DENOISE CALIBRATION AND \n TREATMENT IMAGES:", fg="blue", font=("Arial", 15), width=35)
+# label_treatmentImage = tk.Label(denoiser, text="FILTERED RADIOCHROMIC FILM", font=("Arial", 10))
+
+tk.Label(denoiser, text="Enter Median Kernel:", font=("Arial")).grid(column = 1, row = 8, pady=5)
+medinalval = tk.IntVar(denoiser, value=3)
+medianKernelTk=tk.Entry(denoiser, width=80, textvariable=medinalval)
+
+tk.Label(denoiser, text="Enter Wiener Kernel:", font=("Arial")).grid(column = 1, row = 10)
+wienerval = tk.IntVar(denoiser, value=3)
+wienerKernelTk=tk.Entry(denoiser, width=80, textvariable=wienerval)
+
+imageframe.grid(column = 2, row = 3, padx=40, pady=80, rowspan=5)
+labelImage.grid(column = 2, row = 3, padx=40)
+medianKernelTk.grid(column = 2, row = 8, padx=40)
+wienerKernelTk.grid(column = 2, row = 10, padx=40)
+label_denoising.grid(column = 1, row = 3, padx=40, pady=10)
+# label_treatmentImage.grid(column = 2, row = 3, padx=10, pady=10)
+
+imageframeredcal.grid(column = 2, row = 2, padx=30, pady=10)
+labelImageredcal.grid(column = 2, row = 2, padx=30, pady=10)
+imageframegreencal.grid(column = 1, row = 3, padx=30, pady=10)
+labelImagegreencal.grid(column = 1, row = 3, padx=30, pady=10)
+imageframebluecal.grid(column = 2, row = 3, padx=30, pady=10)
+labelImagebluecal.grid(column = 2, row = 3, padx=30, pady=10)
+
+imageframeredcal1.grid(column = 2, row = 2, padx=30, pady=3)
+labelImageredcal1.grid(column = 2, row = 2, padx=30, pady=3)
+imageframegreencal1.grid(column = 1, row = 3, padx=30, pady=3)
+labelImagegreencal1.grid(column = 1, row = 3, padx=30, pady=3)
+imageframebluecal1.grid(column = 2, row = 3, padx=30, pady=3)
+labelImagebluecal1.grid(column = 2, row = 3, padx=30, pady=3)
+imageframe3chcal1.grid(column = 1, row = 4, padx=30, pady=3)
+labelImage3chcal1.grid(column = 1, row = 4, padx=30, pady=3)
+imageframe3chcalRecal1.grid(column = 2, row = 4, padx=30, pady=3)
+labelImage3chcalRecal1.grid(column = 2, row = 4, padx=30, pady=3)
+
+imageframeredres.grid(column = 0, row = 1, padx=25, pady=20)
+labelImageredres.grid(column = 0, row = 1, padx=25, pady=20)
+imageframegreenres.grid(column = 1, row = 1, padx=25, pady=20)
+labelImagegreenres.grid(column = 1, row = 1, padx=25, pady=20)
+imageframeblueres.grid(column = 0, row = 2, padx=25, pady=20)
+labelImageblueres.grid(column = 0, row = 2, padx=25, pady=20)
+imageframe3chres.grid(column = 1, row = 2, padx=25, pady=20)
+labelImage3chres.grid(column = 1, row = 2, padx=25, pady=20)
+
+denoisingval = tk.StringVar(singleChannelTk, value='none')
+button_median = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH MEDIAN FILTER", variable=denoisingval,value="m",
+                       command = lambda: median(rootFolder, label_denoising,denoiser, labelImage, medianKernelTk)).grid(column = 1, row = 4, padx=10, pady=5)
+button_wiener = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH WIENER FILTER", variable=denoisingval,value="w",
+                       command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage, True, wienerKernelTk)).grid(column = 1, row = 5, padx=10, pady=5)
+button_medianandwiener = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH WIENER AND MEDIAN FILTER", variable=denoisingval,value="w e m",
+                                command = lambda: medianAndWiener(rootFolder, label_denoising, denoiser, labelImage,medianKernelTk ,wienerKernelTk)).grid(column = 1, row = 6, padx=10, pady=5)
+button_no_denoising = tk.Radiobutton(denoiser, text = "DON'T USE ANY FILTER ", variable=denoisingval,value="no filter",
+                             command = lambda: noDenoising(rootFolder, label_denoising, denoiser, labelImage)).grid(column = 1, row = 7, padx=10, pady=5)
+
+fittingfunctionselected = "rational"
+def selected():
+    global fittingfunctionselected
+    fittingfunctionselected = fittingval.get()
+
+tk.Label(multiChannelTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 1, row = 0, padx=30, pady=10)
+recval = tk.IntVar(multiChannelTk, value=6)
+recvalTk=tk.Entry(multiChannelTk, width=10, textvariable=recval)
+recvalTk.grid(column = 2, row = 0, pady=10)
+
+tk.Label(singleChannelTk, text="Choose one fitting function:", font=("Arial")).grid(column = 1, row = 0, pady=50, padx=10,rowspan=2)
+fittingval = tk.StringVar(singleChannelTk, value='rational')
+fittingFunctionTk = tk.Radiobutton(singleChannelTk, text="rational", variable=fittingval, value="rational", command=selected)
+fittingFunction1Tk = tk.Radiobutton(singleChannelTk, text="exponential", padx = 20,variable=fittingval, value="exponential", command=selected)
+
+fittingFunctionTk.grid(column = 2, row = 0)
+fittingFunction1Tk.grid(column = 2, row = 1)
+
+label_rational = tk.Label(propertiesTk, text="RATIONAL FUNCTION: \n f(x)= a + b/(x+c)", fg="blue", font=("Arial", 15)).grid(column = 1, row = 1, pady=10)
+label_rational = tk.Label(propertiesTk, text="Initial values for optimization", fg="blue", font=("Arial", 15)).grid(column = 4, row = 1, pady=10)
+
+tk.Label(propertiesTk, text="a_RED:", font=("Arial")).grid(column = 1, row = 2)
+p0redval = tk.DoubleVar(propertiesTk, value=-10.)
+p0redTk=tk.Entry(propertiesTk, width=10, textvariable=p0redval)
+p0redTk.grid(column = 2, row = 2)
+
+tk.Label(propertiesTk, text="b_RED:", font=("Arial")).grid(column = 1, row = 3)
+p1redval = tk.DoubleVar(propertiesTk, value=200.)
+p1redTk=tk.Entry(propertiesTk, width=10, textvariable=p1redval)
+p1redTk.grid(column = 2, row = 3)
+
+tk.Label(propertiesTk, text="c_RED:", font=("Arial")).grid(column = 1, row = 4)
+p2redval = tk.DoubleVar(propertiesTk, value=3.)
+p2redTk=tk.Entry(propertiesTk, width=10, textvariable=p2redval)
+p2redTk.grid(column = 2, row = 4)
+
+tk.Label(propertiesTk, text="a_RED_inverse:", font=("Arial")).grid(column = 4, row = 2)
+pinv0redval = tk.DoubleVar(propertiesTk, value=-10.)
+pinv0redTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0redval)
+pinv0redTk.grid(column = 5, row = 2)
+
+tk.Label(propertiesTk, text="b_RED_inverse:", font=("Arial")).grid(column = 4, row = 3)
+pinv1redval = tk.DoubleVar(propertiesTk, value=300.)
+pinv1redTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1redval)
+pinv1redTk.grid(column = 5, row = 3)
+
+tk.Label(propertiesTk, text="c_RED_inverse:", font=("Arial")).grid(column = 4, row = 4)
+pinv2redval = tk.DoubleVar(propertiesTk, value=3.)
+pinv2redTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2redval)
+pinv2redTk.grid(column = 5, row = 4)
+
+tk.Label(propertiesTk, text="a_GREEN:", font=("Arial")).grid(column = 1, row = 5)
+p0greenval = tk.DoubleVar(propertiesTk, value=-10.)
+p0greenTk=tk.Entry(propertiesTk, width=10, textvariable=p0greenval)
+p0greenTk.grid(column = 2, row = 5)
+
+tk.Label(propertiesTk, text="b_GREEN:", font=("Arial")).grid(column = 1, row = 6)
+p1greenval = tk.DoubleVar(propertiesTk, value=300.)
+p1greenTk=tk.Entry(propertiesTk, width=10, textvariable=p1greenval)
+p1greenTk.grid(column = 2, row = 6)
+
+tk.Label(propertiesTk, text="c_GREEN:", font=("Arial")).grid(column = 1, row = 7)
+p2greenval = tk.DoubleVar(propertiesTk, value=3.)
+p2greenTk=tk.Entry(propertiesTk, width=10, textvariable=p2greenval)
+p2greenTk.grid(column = 2, row = 7)
+
+tk.Label(propertiesTk, text="a_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 5)
+pinv0greenval = tk.DoubleVar(propertiesTk, value=-10.)
+pinv0greenTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0greenval)
+pinv0greenTk.grid(column = 5, row = 5)
+
+tk.Label(propertiesTk, text="b_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 6)
+pinv1greenval = tk.DoubleVar(propertiesTk, value=300.)
+pinv1greenTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1greenval)
+pinv1greenTk.grid(column = 5, row = 6)
+
+tk.Label(propertiesTk, text="c_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 7)
+pinv2greenval = tk.DoubleVar(propertiesTk, value=3.)
+pinv2greenTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2greenval)
+pinv2greenTk.grid(column = 5, row = 7)
+
+tk.Label(propertiesTk, text="a_BLUE:", font=("Arial")).grid(column = 1, row = 8)
+p0blueval = tk.DoubleVar(propertiesTk, value=-10.)
+p0blueTk=tk.Entry(propertiesTk, width=10, textvariable=p0blueval)
+p0blueTk.grid(column = 2, row = 8)
+
+tk.Label(propertiesTk, text="b_BLUE:", font=("Arial")).grid(column = 1, row = 9)
+p1blueval = tk.DoubleVar(propertiesTk, value=300.)
+p1blueTk=tk.Entry(propertiesTk, width=10, textvariable=p1blueval)
+p1blueTk.grid(column = 2, row = 9)
+
+tk.Label(propertiesTk, text="c_BLUE:", font=("Arial")).grid(column = 1, row = 10)
+p2blueval = tk.DoubleVar(propertiesTk, value=3.)
+p2blueTk=tk.Entry(propertiesTk, width=10, textvariable=p2blueval)
+p2blueTk.grid(column = 2, row = 10)
+
+tk.Label(propertiesTk, text="a_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 8)
+pinv0blueval = tk.DoubleVar(propertiesTk, value=-10.)
+pinv0blueTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0blueval)
+pinv0blueTk.grid(column = 5, row = 8)
+
+tk.Label(propertiesTk, text="b_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 9)
+pinv1blueval = tk.DoubleVar(propertiesTk, value=300.)
+pinv1blueTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1blueval)
+pinv1blueTk.grid(column = 5, row = 9)
+
+tk.Label(propertiesTk, text="c_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 10)
+pinv2blueval = tk.DoubleVar(propertiesTk, value=3.)
+pinv2blueTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2blueval)
+pinv2blueTk.grid(column = 5, row = 10)
+
+label_exponential = tk.Label(propertiesTk, text="EXPONENTIAL FUNCTION: \n f(x)= a*exp(-x/b) + c", fg="blue", font=("Arial", 15)).grid(column = 1, row = 11, pady=10)
+label_exponential = tk.Label(propertiesTk, text="Initial values for optimization", fg="blue", font=("Arial", 15)).grid(column = 4, row = 11, pady=10)
+
+tk.Label(propertiesTk, text="a_RED:", font=("Arial")).grid(column = 1, row = 12)
+p0redexpval = tk.DoubleVar(propertiesTk, value=-10.)
+p0redexpTk=tk.Entry(propertiesTk, width=10, textvariable=p0redexpval)
+p0redexpTk.grid(column = 2, row = 12)
+
+tk.Label(propertiesTk, text="b_RED:", font=("Arial")).grid(column = 1, row = 13)
+p1redexpval = tk.DoubleVar(propertiesTk, value=200.)
+p1redexpTk=tk.Entry(propertiesTk, width=10, textvariable=p1redexpval)
+p1redexpTk.grid(column = 2, row = 13)
+
+tk.Label(propertiesTk, text="c_RED:", font=("Arial")).grid(column = 1, row = 14)
+p2redexpval = tk.DoubleVar(propertiesTk, value=3.)
+p2redexpTk=tk.Entry(propertiesTk, width=10, textvariable=p2redexpval)
+p2redexpTk.grid(column = 2, row = 14)
+
+tk.Label(propertiesTk, text="a_RED_inverse:", font=("Arial")).grid(column = 4, row = 12)
+pinv0redexpval = tk.DoubleVar(propertiesTk, value=100.)
+pinv0redexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0redexpval)
+pinv0redexpTk.grid(column = 5, row = 12)
+
+tk.Label(propertiesTk, text="b_RED_inverse:", font=("Arial")).grid(column = 4, row = 13)
+pinv1redexpval = tk.DoubleVar(propertiesTk, value=5.)
+pinv1redexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1redexpval)
+pinv1redexpTk.grid(column = 5, row = 13)
+
+tk.Label(propertiesTk, text="c_RED_inverse:", font=("Arial")).grid(column = 4, row = 14)
+pinv2redexpval = tk.DoubleVar(propertiesTk, value=0.)
+pinv2redexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2redexpval)
+pinv2redexpTk.grid(column = 5, row = 14)
+
+tk.Label(propertiesTk, text="a_GREEN:", font=("Arial")).grid(column = 1, row = 15)
+p0greenexpval = tk.DoubleVar(propertiesTk, value=500.)
+p0greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=p0greenexpval)
+p0greenexpTk.grid(column = 2, row = 15)
+
+tk.Label(propertiesTk, text="b_GREEN:", font=("Arial")).grid(column = 1, row = 16)
+p1greenexpval = tk.DoubleVar(propertiesTk, value=-500.)
+p1greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=p1greenexpval)
+p1greenexpTk.grid(column = 2, row = 16)
+
+tk.Label(propertiesTk, text="c_GREEN:", font=("Arial")).grid(column = 1, row = 17)
+p2greenexpval = tk.DoubleVar(propertiesTk, value=300.)
+p2greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=p2greenexpval)
+p2greenexpTk.grid(column = 2, row = 17)
+
+tk.Label(propertiesTk, text="a_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 15)
+pinv0greenexpval = tk.DoubleVar(propertiesTk, value=100.)
+pinv0greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0greenexpval)
+pinv0greenexpTk.grid(column = 5, row = 15)
+
+tk.Label(propertiesTk, text="b_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 16)
+pinv1greenexpval = tk.DoubleVar(propertiesTk, value=10.)
+pinv1greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1greenexpval)
+pinv1greenexpTk.grid(column = 5, row = 16)
+
+tk.Label(propertiesTk, text="c_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 17)
+pinv2greenexpval = tk.DoubleVar(propertiesTk, value=30.)
+pinv2greenexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2greenexpval)
+pinv2greenexpTk.grid(column = 5, row = 17)
+
+tk.Label(propertiesTk, text="a_BLUE:", font=("Arial")).grid(column = 1, row = 18)
+p0blueexpval = tk.DoubleVar(propertiesTk, value=500.)
+p0blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=p0blueexpval)
+p0blueexpTk.grid(column = 2, row = 18)
+
+tk.Label(propertiesTk, text="b_BLUE:", font=("Arial")).grid(column = 1, row = 19)
+p1blueexpval = tk.DoubleVar(propertiesTk, value=-150.)
+p1blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=p1blueexpval)
+p1blueexpTk.grid(column = 2, row = 19)
+
+tk.Label(propertiesTk, text="c_BLUE:", font=("Arial")).grid(column = 1, row = 20)
+p2blueexpval = tk.DoubleVar(propertiesTk, value=300.)
+p2blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=p2blueexpval)
+p2blueexpTk.grid(column = 2, row = 20)
+
+tk.Label(propertiesTk, text="a_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 18)
+pinv0blueexpval = tk.DoubleVar(propertiesTk, value=100.)
+pinv0blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0blueexpval)
+pinv0blueexpTk.grid(column = 5, row = 18)
+
+tk.Label(propertiesTk, text="b_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 19)
+pinv1blueexpval = tk.DoubleVar(propertiesTk, value=5.)
+pinv1blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1blueexpval)
+pinv1blueexpTk.grid(column = 5, row = 19)
+
+tk.Label(propertiesTk, text="c_BLUE_inverse:", font=("Arial")).grid(column = 4, row = 20)
+pinv2blueexpval = tk.DoubleVar(propertiesTk, value=0.)
+pinv2blueexpTk=tk.Entry(propertiesTk, width=10, textvariable=pinv2blueexpval)
+pinv2blueexpTk.grid(column = 5, row = 20)
+
+label_exponential = tk.Label(propertiesTk, text="MULTICHANNEL CALIBRATION", fg="blue", font=("Arial", 15)).grid(column = 1, row = 21, padx=60, pady=10)
+label_exponential = tk.Label(propertiesTk, text="Initial values for optimization", fg="blue", font=("Arial", 15)).grid(column = 4, row = 21, padx=90, pady=10)
+
+tk.Label(propertiesTk, text="a_MC:", font=("Arial")).grid(column = 1, row = 22)
+a0mcvalval = tk.DoubleVar(propertiesTk, value=0.)
+a0mcTk=tk.Entry(propertiesTk, width=10, textvariable=a0mcvalval)
+a0mcTk.grid(column = 2, row = 22)
+
+tk.Label(propertiesTk, text="b_MC:", font=("Arial")).grid(column = 1, row = 23)
+a1mcvalval = tk.DoubleVar(propertiesTk, value=1000.)
+a1mcTk=tk.Entry(propertiesTk, width=10, textvariable=a1mcvalval)
+a1mcTk.grid(column = 2, row = 23)
+
+tk.Label(propertiesTk, text="c_MC:", font=("Arial")).grid(column = 1, row = 24)
+a2mcvalval = tk.DoubleVar(propertiesTk, value=5.)
+a2mcTk=tk.Entry(propertiesTk, width=10, textvariable=a2mcvalval)
+a2mcTk.grid(column = 2, row = 24)
+
+tk.Label(propertiesTk, text="a_MC_inverse:", font=("Arial")).grid(column = 4, row = 22)
+a0invmcvalval = tk.DoubleVar(propertiesTk, value=0.)
+a0invmcTk=tk.Entry(propertiesTk, width=10, textvariable=a0invmcvalval)
+a0invmcTk.grid(column = 5, row = 22)
+
+tk.Label(propertiesTk, text="b_MC_inverse:", font=("Arial")).grid(column = 4, row = 23)
+a1invmcvalval = tk.DoubleVar(propertiesTk, value=1000.)
+a1invmcTk=tk.Entry(propertiesTk, width=10, textvariable=a1mcvalval)
+a1invmcTk.grid(column = 5, row = 23)
+
+tk.Label(propertiesTk, text="c_MC_inverse:", font=("Arial")).grid(column = 4, row = 24)
+a2invmcvalval = tk.DoubleVar(propertiesTk, value=5.)
+a2invmcTk=tk.Entry(propertiesTk, width=10, textvariable=a2invmcvalval)
+a2invmcTk.grid(column = 5, row = 24)
+
+tk.Label(propertiesTk, text="Maximum number of fit iterations:", font=("Arial")).grid(column = 1, row = 0, pady=10)
+maxitval = tk.IntVar(propertiesTk, value=100000)
+maxitvalTk=tk.Entry(propertiesTk, width=10, textvariable=maxitval)
+maxitvalTk.grid(column = 2, row = 0)
+
+# tk.Label(propertiesTk, text="Maximum recalibration dose:", font=("Arial")).grid(column = 4, row = 0)
+# recval = tk.IntVar(propertiesTk, value=6)
+# recvalTk=tk.Entry(propertiesTk, width=10, textvariable=recval)
+# recvalTk.grid(column = 5, row = 0)
+
+tk.Label(generalPropertiesTk, text="Scanner resolution (mm):", font=("Arial")).grid(column = 1, row = 0)
+resval = tk.DoubleVar(generalPropertiesTk, value=25.4)
+resvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=resval)
+resvalTk.grid(column = 2, row = 0, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Dots Per Inch (DPI):", font=("Arial")).grid(column = 1, row = 1)
+dpival = tk.IntVar(generalPropertiesTk, value=150)
+dpivalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=dpival)
+dpivalTk.grid(column = 2, row = 1, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Red channel index:", font=("Arial")).grid(column = 3, row = 0)
+redchval = tk.IntVar(generalPropertiesTk, value=2)
+redchvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=redchval)
+redchvalTk.grid(column = 4, row = 0, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Green channel index:", font=("Arial")).grid(column = 3, row = 1)
+greenchval = tk.IntVar(generalPropertiesTk, value=1)
+greenchvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=greenchval)
+greenchvalTk.grid(column = 4, row = 1, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Blue channel index:", font=("Arial")).grid(column = 3, row = 2)
+bluechval = tk.IntVar(generalPropertiesTk, value=0)
+bluechvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=bluechval)
+bluechvalTk.grid(column = 4, row = 2, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Calibration Roi dimension:", font=("Arial")).grid(column = 1, row = 2)
+calroidimval = tk.IntVar(generalPropertiesTk, value=5)
+calroidimvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=calroidimval)
+calroidimvalTk.grid(column = 2, row = 2, padx=50, pady=10)
+
+# tk.Label(generalPropertiesTk, text="Central Roi dimension for dose statistics calculation (pixels):", font=("Arial")).grid(column = 1, row = 3, padx=30, pady=10)
+# dimRoiCalibrationval = tk.IntVar(generalPropertiesTk, value=10)
+# dimRoiCalibrationvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=dimRoiCalibrationval)
+# dimRoiCalibrationvalTk.grid(column = 2, row = 3, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Isodose difference in Gy:", font=("Arial")).grid(column = 1, row = 4)
+isodoseDifferenceGyval = tk.DoubleVar(generalPropertiesTk, value=0.1)
+isodoseDifferenceGyvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=isodoseDifferenceGyval)
+isodoseDifferenceGyvalTk.grid(column = 2, row = 4, padx=50, pady=10)
+
+
+tk.Label(generalPropertiesTk, text="Raw dose image output format:", font=("Arial")).grid(column = 1, row = 6)
+doseRawImageOutputFormatval = tk.StringVar(generalPropertiesTk, value='tiff')
+doseRawImageOutputFormatvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=doseRawImageOutputFormatval)
+doseRawImageOutputFormatvalTk.grid(column = 2, row = 6, padx=50, pady=10)
+
+tk.Label(generalPropertiesTk, text="Dose plots color map:", font=("Arial")).grid(column = 1, row = 7)
+cmapval = tk.StringVar(generalPropertiesTk, value='rainbow')
+cmapvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=cmapval)
+cmapvalTk.grid(column = 2, row = 7, padx=50, pady=10)
+
+resultfoderbutton = tk.Button(doseresultsTk, text="BROWSE RESULT FOLDER", command= lambda: openresultfolder(rootFolder))
+resultfoderbutton.grid(row=0, column=0, pady=27, columnspan=2)
+
+
+button_singleCalibrtion = tk.Button(singleChannelTk, text = "START SINGLE CHANNEL CALIBRATION AND DOSIMETRY", command = lambda: singleChannelDosimetryGUI(rootFolder, 
+                                                                                fittingfunctionselected, 
+                                                                                (float(p0redTk.get()), float(p1redTk.get()), float(p2redTk.get())), 
+                                                                                (float(pinv0redTk.get()), float(pinv1redTk.get()), float(pinv2redTk.get() )), 
+                                                                                (float(p0greenTk.get()), float(p1greenTk.get()), float(p2greenTk.get())), 
+                                                                                (float(pinv0greenTk.get()), float(pinv1greenTk.get()), float(pinv2greenTk.get() )), 
+                                                                                (float(p0blueTk.get()), float(p1blueTk.get()), float(p2blueTk.get())), 
+                                                                                (float(pinv0blueTk.get()), float(pinv1blueTk.get()), float(pinv2blueTk.get()) ), 
+                                                                                (float(p0redexpTk.get()), float(p1redexpTk.get()), float(p2redexpTk.get())) , 
+                                                                                (float(pinv0redexpTk.get()), float(pinv1redexpTk.get()), float(pinv2redexpTk.get() )), 
+                                                                                (float(p0greenexpTk.get()), float(p1greenexpTk.get()), float(p2greenexpTk.get())), 
+                                                                                (float(pinv0greenexpTk.get()), float(pinv1greenexpTk.get()), float(pinv2greenexpTk.get() )), 
+                                                                                (float(p0blueexpTk.get()), float(p1blueexpTk.get()), float(p2blueexpTk.get())) , 
+                                                                                (float(pinv0blueexpTk.get()), float(pinv1blueexpTk.get()), float(pinv2blueexpTk.get() )), 
+                                                                                np.array([float(a0mcTk.get()), float(a1mcTk.get()), float(a2mcTk.get())]), #da cambiare eventualmente il punto iniziale
+                                                                                np.array([float(a0invmcTk.get()), float(a1invmcTk.get()), float(a2invmcTk.get())]), #da cambiare eventualmente il punto iniziale
+                                                                                int(maxitvalTk.get()), 
+                                                                                int(recvalTk.get()), 
+                                                                                cmapvalTk.get(), 
+                                                                                doseRawImageOutputFormatvalTk.get() , 
+                                                                                float(isodoseDifferenceGyvalTk.get()) , 
+                                                                                10, 
+                                                                                int(calroidimvalTk.get()), 
+                                                                                int(redchvalTk.get()), 
+                                                                                int(greenchvalTk.get()), 
+                                                                                int(bluechvalTk.get()), 
+                                                                                float(resvalTk.get()), 
+                                                                                float(dpivalTk.get()), 
+                                                                                (float(resvalTk.get())/float(dpivalTk.get())),
+                                                                                0,
+                                                                                doseresultsTk, 
+                                                                                labelImageredres,
+                                                                                labelImagegreenres, 
+                                                                                labelImageblueres,
+                                                                                singleChannelTk,
+                                                                                labelImageredcal,
+                                                                                labelImagegreencal,
+                                                                                labelImagebluecal
+                                                                                )).grid(column = 1, row = 2 , padx=10, pady=10)
+
+
+button_multichannelCalibration = tk.Button(multiChannelTk, text = "START MULTI-CHANNEL CALIBRATION AND DOSIMETRY", command = lambda: multiChannelDosimetryGUI(rootFolder, 
+                                                                               (float(p0redTk.get()), float(p1redTk.get()), float(p2redTk.get())), 
+                                                                               (float(pinv0redTk.get()), float(pinv1redTk.get()), float(pinv2redTk.get() )), 
+                                                                               (float(p0greenTk.get()), float(p1greenTk.get()), float(p2greenTk.get())), 
+                                                                               (float(pinv0greenTk.get()), float(pinv1greenTk.get()), float(pinv2greenTk.get() )), 
+                                                                               (float(p0blueTk.get()), float(p1blueTk.get()), float(p2blueTk.get())), 
+                                                                               (float(pinv0blueTk.get()), float(pinv1blueTk.get()), float(pinv2blueTk.get() )), 
+                                                                               (float(p0redexpTk.get()), float(p1redexpTk.get()), float(p2redexpTk.get())) , 
+                                                                               (float(pinv0redexpTk.get()), float(pinv1redexpTk.get()), float(pinv2redexpTk.get()) ), 
+                                                                               (float(p0greenexpTk.get()), float(p1greenexpTk.get()), float(p2greenexpTk.get())), 
+                                                                               (float(pinv0greenexpTk.get()), float(pinv1greenexpTk.get()), float(pinv2greenexpTk.get()) ), 
+                                                                               (float(p0blueexpTk.get()), float(p1blueexpTk.get()), float(p2blueexpTk.get())) , 
+                                                                               (float(pinv0blueexpTk.get()), float(pinv1blueexpTk.get()), float(pinv2blueexpTk.get()) ), 
+                                                                               np.array([float(a0mcTk.get()), float(a1mcTk.get()), float(a2mcTk.get())]), #da cambiare eventualmente il punto iniziale
+                                                                               np.array([float(a0invmcTk.get()), float(a1invmcTk.get()), float(a2invmcTk.get())]), #da cambiare eventualmente il punto iniziale                                                                            
+                                                                               int(maxitvalTk.get()), 
+                                                                               int(recvalTk.get()), 
+                                                                               cmapvalTk.get(), 
+                                                                               doseRawImageOutputFormatvalTk.get() , 
+                                                                               float(isodoseDifferenceGyvalTk.get()) ,
+                                                                               10, 
+                                                                               int(calroidimvalTk.get()), 
+                                                                               int(redchvalTk.get()), 
+                                                                               int(greenchvalTk.get()), 
+                                                                               int(bluechvalTk.get()), 
+                                                                               float(resvalTk.get()), 
+                                                                               float(dpivalTk.get()), 
+                                                                               (float(resvalTk.get())/float(dpivalTk.get())),
+                                                                               0,
+                                                                               doseresultsTk,
+                                                                               labelImageredres,
+                                                                               labelImagegreenres, 
+                                                                               labelImageblueres, 
+                                                                               labelImage3chres,
+                                                                               multiChannelTk,
+                                                                               labelImageredcal1,
+                                                                               labelImagegreencal1,
+                                                                               labelImagebluecal1,
+                                                                               labelImage3chcal1,
+                                                                               labelImage3chcalRecal1)).grid(column = 1, row = 2 , padx=10, pady=10)
+
+
+
+
+
+chromoTk.mainloop()
