@@ -6,14 +6,10 @@ import sys
 import tkinter
 import tkinter.ttk as ttk
 from tkinter import filedialog
-from sys import exit
 
 sys.path.append(".")
 from functions import *
-from doseClass import *
 from rootFolderClass import *
-from calibrationClass import *
-from fitResultsSingleChannel import *
 
 widthTk = 1100
 heightTk = 850
@@ -162,11 +158,11 @@ imageframe3chres.grid(column = 1, row = 2, padx=25, pady=20)
 labelImage3chres.grid(column = 1, row = 2, padx=25, pady=20)
 
 denoisingval = tk.StringVar(singleChannelTk, value='none')
-button_median = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH MEDIAN FILTER", variable=denoisingval,value="m",
+button_median = tk.Radiobutton(denoiser, text = "DENOISE CALIBRATION AND TEST FILMS WITH MEDIAN FILTER", variable=denoisingval,value="m",
                        command = lambda: median(rootFolder, label_denoising,denoiser, labelImage, medianKernelTk)).grid(column = 1, row = 4, padx=10, pady=5)
-button_wiener = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH WIENER FILTER", variable=denoisingval,value="w",
+button_wiener = tk.Radiobutton(denoiser, text = "DENOISE CALIBRATION AND TEST FILMS WITH WIENER FILTER", variable=denoisingval,value="w",
                        command = lambda: wiener(rootFolder, rootFolder.nonFilteredCalibrationPath, rootFolder.nonFilteredTreatmentPath, label_denoising,denoiser, labelImage, True, wienerKernelTk)).grid(column = 1, row = 5, padx=10, pady=5)
-button_medianandwiener = tk.Radiobutton(denoiser, text = "DENOISE IMAGES WITH WIENER AND MEDIAN FILTER", variable=denoisingval,value="w e m",
+button_medianandwiener = tk.Radiobutton(denoiser, text = "DENOISE CALIBRATION AND TEST FILMS WITH WIENER AND MEDIAN FILTER", variable=denoisingval,value="w e m",
                                 command = lambda: medianAndWiener(rootFolder, label_denoising, denoiser, labelImage,medianKernelTk ,wienerKernelTk)).grid(column = 1, row = 6, padx=10, pady=5)
 button_no_denoising = tk.Radiobutton(denoiser, text = "DON'T USE ANY FILTER ", variable=denoisingval,value="no filter",
                              command = lambda: noDenoising(rootFolder, label_denoising, denoiser, labelImage)).grid(column = 1, row = 7, padx=10, pady=5)
@@ -418,32 +414,32 @@ maxitvalTk.grid(column = 2, row = 0)
 # recvalTk=tk.Entry(propertiesTk, width=10, textvariable=recval)
 # recvalTk.grid(column = 5, row = 0)
 
-tk.Label(generalPropertiesTk, text="Scanner resolution (mm):", font=("Arial")).grid(column = 1, row = 0)
+tk.Label(generalPropertiesTk, text="Scanner resolution (mm):", font=("Arial")).grid(column = 1, row = 0, padx=80)
 resval = tk.DoubleVar(generalPropertiesTk, value=25.4)
 resvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=resval)
 resvalTk.grid(column = 2, row = 0, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Dots Per Inch (DPI):", font=("Arial")).grid(column = 1, row = 1)
+tk.Label(generalPropertiesTk, text="Dots Per Inch (DPI):", font=("Arial")).grid(column = 1, row = 1, padx=80)
 dpival = tk.IntVar(generalPropertiesTk, value=150)
 dpivalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=dpival)
 dpivalTk.grid(column = 2, row = 1, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Red channel index:", font=("Arial")).grid(column = 3, row = 0)
+tk.Label(generalPropertiesTk, text="Red channel index:", font=("Arial")).grid(column = 3, row = 0, padx=80)
 redchval = tk.IntVar(generalPropertiesTk, value=2)
 redchvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=redchval)
 redchvalTk.grid(column = 4, row = 0, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Green channel index:", font=("Arial")).grid(column = 3, row = 1)
+tk.Label(generalPropertiesTk, text="Green channel index:", font=("Arial")).grid(column = 3, row = 1, padx=80)
 greenchval = tk.IntVar(generalPropertiesTk, value=1)
 greenchvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=greenchval)
 greenchvalTk.grid(column = 4, row = 1, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Blue channel index:", font=("Arial")).grid(column = 3, row = 2)
+tk.Label(generalPropertiesTk, text="Blue channel index:", font=("Arial")).grid(column = 3, row = 2, padx=80)
 bluechval = tk.IntVar(generalPropertiesTk, value=0)
 bluechvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=bluechval)
 bluechvalTk.grid(column = 4, row = 2, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Calibration Roi dimension:", font=("Arial")).grid(column = 1, row = 2)
+tk.Label(generalPropertiesTk, text="Calibration Roi dimension:", font=("Arial")).grid(column = 1, row = 2, padx=80)
 calroidimval = tk.IntVar(generalPropertiesTk, value=5)
 calroidimvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=calroidimval)
 calroidimvalTk.grid(column = 2, row = 2, padx=50, pady=10)
@@ -453,23 +449,23 @@ calroidimvalTk.grid(column = 2, row = 2, padx=50, pady=10)
 # dimRoiCalibrationvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=dimRoiCalibrationval)
 # dimRoiCalibrationvalTk.grid(column = 2, row = 3, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Isodose difference in Gy:", font=("Arial")).grid(column = 1, row = 4)
+tk.Label(generalPropertiesTk, text="Isodose difference in Gy:", font=("Arial")).grid(column = 1, row = 4, padx=80)
 isodoseDifferenceGyval = tk.DoubleVar(generalPropertiesTk, value=0.1)
 isodoseDifferenceGyvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=isodoseDifferenceGyval)
 isodoseDifferenceGyvalTk.grid(column = 2, row = 4, padx=50, pady=10)
 
 
-tk.Label(generalPropertiesTk, text="Raw dose image output format:", font=("Arial")).grid(column = 1, row = 6)
+tk.Label(generalPropertiesTk, text="Raw dose image output format:", font=("Arial")).grid(column = 1, row = 6, padx=50)
 doseRawImageOutputFormatval = tk.StringVar(generalPropertiesTk, value='tiff')
 doseRawImageOutputFormatvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=doseRawImageOutputFormatval)
 doseRawImageOutputFormatvalTk.grid(column = 2, row = 6, padx=50, pady=10)
 
-tk.Label(generalPropertiesTk, text="Dose plots color map:", font=("Arial")).grid(column = 1, row = 7)
+tk.Label(generalPropertiesTk, text="Dose plots color map:", font=("Arial")).grid(column = 1, row = 7, padx=80)
 cmapval = tk.StringVar(generalPropertiesTk, value='rainbow')
 cmapvalTk=tk.Entry(generalPropertiesTk, width=10, textvariable=cmapval)
 cmapvalTk.grid(column = 2, row = 7, padx=50, pady=10)
 
-resultfoderbutton = tk.Button(doseresultsTk, text="BROWSE RESULT FOLDER", command= lambda: openresultfolder(rootFolder))
+resultfoderbutton = tk.Button(doseresultsTk, text="OPEN RESULT FOLDER", command= lambda: openresultfolder(rootFolder))
 resultfoderbutton.grid(row=0, column=0, pady=27, columnspan=2)
 
 
