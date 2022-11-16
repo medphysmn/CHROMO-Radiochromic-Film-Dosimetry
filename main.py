@@ -239,7 +239,7 @@ pinv0greenTk=tk.Entry(propertiesTk, width=10, textvariable=pinv0greenval)
 pinv0greenTk.grid(column = 5, row = 5)
 
 tk.Label(propertiesTk, text="b_GREEN_inverse:", font=("Arial")).grid(column = 4, row = 6)
-pinv1greenval = tk.DoubleVar(propertiesTk, value=300.)
+pinv1greenval = tk.DoubleVar(propertiesTk, value=-300.)
 pinv1greenTk=tk.Entry(propertiesTk, width=10, textvariable=pinv1greenval)
 pinv1greenTk.grid(column = 5, row = 6)
 
