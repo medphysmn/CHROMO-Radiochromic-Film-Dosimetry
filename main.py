@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-#TODO NET IMAGE - BKG - CORREZIONE LATERALE
+#TODO CORREZIONE LATERALE - BGK PROFILI - CONTROLLA MULTICHANNEL INV IL GRAFICO DELLA FUNZIONE E STRANO
 import sys
 import tkinter
 import tkinter.ttk as ttk
