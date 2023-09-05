@@ -6,7 +6,7 @@ A python based software used to measure radiochromic film dose using an efficien
 
 If you use or reference this work in a publication or any other medium, please cite it as follows:
 
-Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film DOSIMETRY, 2022, (https://github.com/albero63/CHROMO)."
+Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film DOSIMETRY, 2022, ((https://github.com/medphysmn/CHROMO))."
 
 
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
