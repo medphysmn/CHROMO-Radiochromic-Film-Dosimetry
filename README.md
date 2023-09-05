@@ -8,7 +8,6 @@ If you use or reference this work in a publication or any other medium, please c
 
 Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film DOSIMETRY, 2022, ((https://github.com/medphysmn/CHROMO))."
 
-
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
 ![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190628154-678fc275-1263-4095-b27c-98fac5691747.png)
 ![dose-response_calibration_plot_red](https://user-images.githubusercontent.com/37676343/191227455-aba872ef-43cf-4fc7-ad5e-0ad860e37411.png)
@@ -32,6 +31,8 @@ Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film 
 
 Tested in a Linux environment.
 **To ensure the program operates correctly, you may need to set permissions with sudo chmod 777 denoiser.py**
+
+contact: matteo.bagnalasta@gmail.com
 
 [1] Lewis D, Micke A, Yu X, Chan MF. An efficient protocol for radiochromic film dosimetry combining calibration and measurement in a single scan. Med Phys. 2012 Oct;39(10):6339-50. doi: 10.1118/1.4754797. PMID: 23039670; PMCID: PMC9381144.
 
