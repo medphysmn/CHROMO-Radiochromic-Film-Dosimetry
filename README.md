@@ -2,7 +2,7 @@
 
 **WARNING: NO WARRANTY, USE AT OWN RISK.**
 
-A python based software used to measure radiochromic film dose using an efficient **calibration** and **single scan recalibration** method [1]. This method [1] is reported and recomended as one of the possible dosimetry methods by the American Association of Physicists in Medicine (AAPM) 2020 Report [2]
+A python based software used to measure radiochromic film dose using an efficient **calibration** and **single scan recalibration** method [1]. The software aligns with the latest dosimetry methodologies, in particular the American Association of Physicists in Medicine (AAPM) 2020 Report [2].
 
 If you use or reference this work in a publication or any other medium, please cite it as follows:
 
