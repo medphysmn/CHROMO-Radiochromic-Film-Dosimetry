@@ -19,11 +19,12 @@ A python based software used to measure radiochromic film dose using an efficien
 - **DOSIMETRY WITH FAST INTRA SCAN RECALIBRATION METHOD** of multiple scans at the same time [1] [2]
 - **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] 
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
-- **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] (TODO)
+- **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] **(TODO)**
 - **RESULT DOSE IMAGES IN DIFFERENT FORMATS**
 - **PLOTS OF THE RESULTS**
 
-sudo chmod 777 denoiser.py
+Tested in a Linux environment.
+**To ensure the program operates correctly, you may need to set permissions with sudo chmod 777 denoiser.py**
 
 [1] Lewis D, Micke A, Yu X, Chan MF. An efficient protocol for radiochromic film dosimetry combining calibration and measurement in a single scan. Med Phys. 2012 Oct;39(10):6339-50. doi: 10.1118/1.4754797. PMID: 23039670; PMCID: PMC9381144.
 
