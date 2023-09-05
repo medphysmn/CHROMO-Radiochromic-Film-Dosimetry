@@ -16,7 +16,7 @@ Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film 
 ![dose-response_calibration_plot_3ch(1)](https://user-images.githubusercontent.com/37676343/191226861-a331e1ea-7804-404c-9c58-ba43f3944332.png)
 ![dose-response_recalibrated_plot_treatment_2](https://user-images.githubusercontent.com/37676343/191227612-cddfd84e-67dc-4c22-9c22-806d8f53333f.png)
 
-**FEATURES**:
+**IMPLEMENTED FEATURES**:
 
 - **MULTI-CHANNEL DOSIMETRY** of multiple scans at the same time [1] [2] 
 - **SINGLE-CHANNEL DOSIMETRY** of multiple scans at the same time [2]
@@ -27,7 +27,7 @@ Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film 
 - **RESULT DOSE IMAGES IN DIFFERENT FORMATS**
 - **PLOTS OF THE RESULTS**
 
-**TODO features**
+**TODO FEATURES**
 - **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] **(TODO)**
 
 Tested in a Linux environment.
