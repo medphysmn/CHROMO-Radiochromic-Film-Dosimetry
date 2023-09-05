@@ -24,9 +24,11 @@ Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film 
 - **DOSIMETRY WITH FAST INTRA SCAN RECALIBRATION METHOD** of multiple scans at the same time [1] [2]
 - **FILM CALIBRATION WITH DIFFERENT FITTING FUNCTIONS** [2] 
 - **SCAN DENOISING** with Median and Wiener Filters [4] [5]
-- **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] **(TODO)**
 - **RESULT DOSE IMAGES IN DIFFERENT FORMATS**
 - **PLOTS OF THE RESULTS**
+
+**TODO features**
+- **CORRECTION OF LATERAL RESPONSE ARTIFACT** [3] **(TODO)**
 
 Tested in a Linux environment.
 **To ensure the program operates correctly, you may need to set permissions with sudo chmod 777 denoiser.py**
