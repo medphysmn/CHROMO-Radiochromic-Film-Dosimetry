@@ -18,7 +18,7 @@ CHROMO is python based software used to measure radiochromic film dose using an 
 
 If you use or reference this work in a publication or any other medium, please cite it as follows:
 
-Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film DOSIMETRY, 2022, ((https://github.com/medphysmn/CHROMO))."
+Bagnalasta Matteo, CHROMO: a software for a FAST AND ACCURATE Radiochromic Film DOSIMETRY, 2022, https://github.com/medphysmn/CHROMO."
 
 ![dose_3ch_treatment_1_figure](https://user-images.githubusercontent.com/37676343/190628150-f0b8dfe2-b822-4ce6-9236-46927fa47b77.png)
 ![dose_3ch_treatment_2_figure](https://user-images.githubusercontent.com/37676343/190628154-678fc275-1263-4095-b27c-98fac5691747.png)
